@@ -2,7 +2,7 @@ import "server-only";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { settings, tasks, applications, projects, checkins, transactions, notes, programDays, planItems } from "@/db/schema";
+import { settings, tasks, applications, projects, checkins, transactions, notes, programDays, planItems, socialLogs } from "@/db/schema";
 import { todayKey } from "@/lib/types";
 import { programRuleIds } from "@/lib/program";
 import { PLAN_KIND_IDS } from "@/lib/plan";
@@ -45,6 +45,8 @@ export const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("note.delete"), id }),
   z.object({ action: z.literal("settings.update"), name: z.string().trim().min(1).max(40), startedOn: startDate, savingGoal: z.number().int().positive().max(2000000000), dailyTarget: z.number().int().min(1).max(20) }),
   z.object({ action: z.literal("program.save"), completed: z.array(z.string().max(50)).max(30), note: z.string().max(5000).optional().default("") }),
+  z.object({ action: z.literal("social.log"), title, feared: z.string().trim().max(300).default(""), prediction: z.number().int().min(1).max(10), outcome: z.number().int().min(1).max(10), note: z.string().max(1000).optional().default("") }),
+  z.object({ action: z.literal("social.delete"), id }),
   z.object({ action: z.literal("day.close") }),
 ]);
 
@@ -60,7 +62,7 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
     // Once a day is closed (هر شب ساعت ۱۲) it is locked: mutations that touch
     // the day itself are rejected. Free-floating data (notes, jobs, projects,
     // settings) is not day-scoped and stays editable.
-    const dayScopedActions = new Set(["task.create", "task.toggle", "task.time", "task.delete", "checkin.save", "finance.create", "finance.delete", "program.save", "plan.add", "plan.update", "plan.toggle", "plan.reorder", "plan.drop", "plan.generate"]);
+    const dayScopedActions = new Set(["task.create", "task.toggle", "task.time", "task.delete", "checkin.save", "finance.create", "finance.delete", "program.save", "plan.add", "plan.update", "plan.toggle", "plan.reorder", "plan.drop", "plan.generate", "social.log", "social.delete"]);
     if (dayScopedActions.has(input.action) && (await isDayClosed(todayKey()))) {
       return { ok: false, error: "این روز بسته و جمع‌بندی شده است؛ تغییرهای امروز تا فردا پشتیبانی نمی‌شود.", status: 409 };
     }
@@ -173,6 +175,14 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
       case "plan.generate": {
         const result = await generatePlanForToday();
         if (!result.created) return { ok: false, error: "امروز برنامه دارد؛ همان‌ها را ویرایش کن.", status: 409 };
+        break;
+      }
+      case "social.log": {
+        await db.insert(socialLogs).values({ id: crypto.randomUUID(), day: todayKey(), title: input.title, feared: input.feared, prediction: input.prediction, outcome: input.outcome, note: input.note });
+        break;
+      }
+      case "social.delete": {
+        await db.delete(socialLogs).where(eq(socialLogs.id, input.id));
         break;
       }
       case "program.save": {

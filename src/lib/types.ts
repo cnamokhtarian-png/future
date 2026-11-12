@@ -1,4 +1,4 @@
-import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays, dailyReviews, planItems } from "@/db/schema";
+import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays, dailyReviews, planItems, socialLogs } from "@/db/schema";
 
 export type Task = typeof tasks.$inferSelect;
 export type Application = typeof applications.$inferSelect;
@@ -9,6 +9,7 @@ export type Note = typeof notes.$inferSelect;
 export type ProgramDay = typeof programDays.$inferSelect;
 export type DailyReview = typeof dailyReviews.$inferSelect;
 export type PlanItem = typeof planItems.$inferSelect;
+export type SocialLog = typeof socialLogs.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 
 export type Workspace = {
@@ -22,6 +23,7 @@ export type Workspace = {
   programDays: ProgramDay[];
   dailyReviews: DailyReview[];
   planItems: PlanItem[];
+  socialLogs: SocialLog[];
 };
 
 export type View = "assistant" | "overview" | "roadmap" | "career" | "projects" | "progress" | "health" | "finance" | "development" | "notes" | "guide";

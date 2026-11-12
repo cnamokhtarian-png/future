@@ -103,6 +103,18 @@ export const programDays = robehrah.table("journey_program_days", {
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
+// دفترچه‌ی مواجهه‌ی اجتماعی — پیش‌بینی ترس در برابر واقعیت؛ مبنای کار روی اضطراب اجتماعی.
+export const socialLogs = robehrah.table("journey_social_logs", {
+  id: text("id").primaryKey(),
+  day: text("day").notNull(),
+  title: text("title").notNull(),
+  feared: text("feared").notNull().default(""),
+  prediction: integer("prediction").notNull().default(5),
+  outcome: integer("outcome").notNull().default(5),
+  note: text("note").notNull().default(""),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});
+
 export const dailyReviews = robehrah.table("journey_daily_reviews", {
   day: text("day").primaryKey(),
   percent: integer("percent").notNull(),

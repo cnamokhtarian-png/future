@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Flame, Award, CalendarDays, TrendingUp, Check, Zap, Info, Moon, Footprints, Cigarette, Wallet, ChevronLeft, Quote, BookOpen, Leaf, ShieldCheck, Lock, Sparkles, CalendarCheck } from "lucide-react";
+import { Flame, Award, CalendarDays, TrendingUp, Check, Zap, Info, Moon, Footprints, Cigarette, Wallet, ChevronLeft, Quote, BookOpen, Leaf, ShieldCheck, Lock, Sparkles, CalendarCheck, HeartHandshake } from "lucide-react";
 import { fa, todayKey, addDaysKey, type Workspace, type DailyReview } from "@/lib/types";
 import { programRules, programContext, effectiveCompleted, programStreak, recentProgramSnapshots, autoDoneFor, PROGRAM_LENGTH, PROGRAM_NAME, type ProgramRule } from "@/lib/program";
 import { IconBox, Progress, type Mutate } from "@/components/ui";
 import { PlannerCard } from "@/components/planner";
+import { SocialTab } from "@/components/social";
 
 const WEEKDAY = new Intl.DateTimeFormat("fa-IR", { weekday: "narrow", timeZone: "Asia/Tehran" });
 
@@ -26,7 +27,7 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
   const weekAverage = Math.round(snapshots.slice(-7).reduce((sum, day) => sum + day.percent, 0) / 7);
   const [gratitude, setGratitude] = useState(todayRow?.note || "");
   const [review, setReview] = useState("");
-  const [tab, setTab] = useState<"today" | "reviews">("today");
+  const [tab, setTab] = useState<"today" | "reviews" | "social">("today");
   const reviews = data.dailyReviews; // مرتب از جدید به قدیم
   const todayClosed = reviews.some((item) => item.day === today);
 
@@ -81,6 +82,7 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
     <div className="dev-tabs" role="tablist" aria-label="نمای روزانه">
       <button role="tab" aria-selected={tab === "today"} className={`dev-tab ${tab === "today" ? "active" : ""}`} onClick={() => setTab("today")}><Flame size={14} /> امروز</button>
       <button role="tab" aria-selected={tab === "reviews"} className={`dev-tab ${tab === "reviews" ? "active" : ""}`} onClick={() => setTab("reviews")}><CalendarCheck size={14} /> جمع‌بندی <span className="count-badge">{fa(reviews.length)}</span></button>
+      <button role="tab" aria-selected={tab === "social"} className={`dev-tab ${tab === "social" ? "active" : ""}`} onClick={() => setTab("social")}><HeartHandshake size={14} /> پیوند اجتماعی <span className="count-badge">{fa(data.socialLogs.length)}</span></button>
     </div>
 
     {tab === "today" ? (
@@ -141,8 +143,10 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
       <textarea rows={4} value={review} onChange={(event) => setReview(event.target.value)} placeholder="اینجا بنویس…" aria-label="پاسخ‌های مرور هفتگی" /><div className="review-actions"><button className="button primary small" disabled={busy || !review.trim()} onClick={saveWeeklyReview}><Check size={14} /> ذخیره در یادداشت‌ها</button><button className="text-button" onClick={() => setReview("")}>پاک کردن<ChevronLeft size={13} /></button></div>
     </section>
     </>
-    ) : (
+    ) : tab === "reviews" ? (
       <ReviewsTab reviews={reviews} />
+    ) : (
+      <SocialTab data={data} mutate={mutate} busy={busy} todayClosed={todayClosed} />
     )}
 
     <div className="medical-note"><Info size={19} /><div><strong>یک برنامه سخت، جای درمان نیست.</strong><p>«چالش ۷۵ روزه» ابزار انضباط است، نه درمان افسردگی، اضطراب یا اعتیاد. اگر خلق، خواب یا میلت به آسیب جدی تغییر کرد، فوراً با روان‌شناس، روان‌پزشک یا اورژانس (۱۱۵) / اورژانس اجتماعی (۱۲۳) تماس بگیر. قطع ناگهانی الکل در مصرف سنگین و منظم، خطرناک است و باید با ارزیابی پزشک انجام شود. ورزش را اگر بیماری قلبی یا محدودیت حرکتی داری، فقط با نظر پزشک شروع کن.</p></div></div>
