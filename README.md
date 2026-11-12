@@ -46,5 +46,7 @@ DATABASE_URL=postgresql://127.0.0.1:55432/postgres TEST_BASE_URL=http://localhos
 پروژه‌ی Vercel مجزا به نام `robeh-rah` روی فریم‌ورک Next.js.
 
 - `DATABASE_URL` → transaction pooler سوپابیس (`:6543`)
+- نکته‌ی مهم: خانواده‌ی هاست pooler (`aws-0-...` یا `aws-1-...`) برای هر پروژه تعیین شده است؛ انتخاب اشتباه خطای `tenant/user ... not found` می‌دهد. برای پروژه‌ی auralis مقدار صحیح `aws-1-eu-central-1.pooler.supabase.com` است.
+- `sslmode` در `src/db/index.ts` نادیده و حذف می‌شود؛ اتصال TLS با `rejectUnauthorized: false` برقرار می‌شود (گواهی زنجیره‌ای Supabase توسط CA عمومی تأیید نمی‌شود).
 - `SITE_AUTH_USER` / `SITE_AUTH_PASSWORD` → برای محافظت از داده‌های شخصی روی دامنه‌ی عمومی
 - اولین بازدید از سایت، داده‌های اولیه (تنظیمات، سه پروژه‌ی پیش‌فرض و قدم‌های امروز) را خودکار seed می‌کند.
