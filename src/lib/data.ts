@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/db";
-import { settings, tasks, applications, projects, checkins, transactions, notes } from "@/db/schema";
+import { settings, tasks, applications, projects, checkins, transactions, notes, programDays } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
 import { todayKey, type Workspace } from "@/lib/types";
 
@@ -39,7 +39,7 @@ export async function getWorkspace(): Promise<Workspace> {
     ]).onConflictDoNothing();
   });
 
-  const [profile, taskList, applicationList, projectList, checkinList, transactionList, noteList] = await Promise.all([
+  const [profile, taskList, applicationList, projectList, checkinList, transactionList, noteList, programDayList] = await Promise.all([
     db.select().from(settings).where(eq(settings.id, "personal")),
     db.select().from(tasks).orderBy(asc(tasks.createdAt), asc(tasks.id)),
     db.select().from(applications).orderBy(desc(applications.createdAt)),
@@ -47,6 +47,7 @@ export async function getWorkspace(): Promise<Workspace> {
     db.select().from(checkins).orderBy(desc(checkins.day)),
     db.select().from(transactions).orderBy(desc(transactions.createdAt)),
     db.select().from(notes).orderBy(desc(notes.createdAt)),
+    db.select().from(programDays).orderBy(desc(programDays.day)),
   ]);
-  return { settings: profile[0], tasks: taskList, applications: applicationList, projects: projectList, checkins: checkinList, transactions: transactionList, notes: noteList };
+  return { settings: profile[0], tasks: taskList, applications: applicationList, projects: projectList, checkins: checkinList, transactions: transactionList, notes: noteList, programDays: programDayList };
 }

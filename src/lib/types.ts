@@ -1,4 +1,4 @@
-import type { settings, tasks, applications, projects, checkins, transactions, notes } from "@/db/schema";
+import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays } from "@/db/schema";
 
 export type Task = typeof tasks.$inferSelect;
 export type Application = typeof applications.$inferSelect;
@@ -6,6 +6,7 @@ export type Project = typeof projects.$inferSelect;
 export type Checkin = typeof checkins.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Note = typeof notes.$inferSelect;
+export type ProgramDay = typeof programDays.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 
 export type Workspace = {
@@ -16,9 +17,10 @@ export type Workspace = {
   checkins: Checkin[];
   transactions: Transaction[];
   notes: Note[];
+  programDays: ProgramDay[];
 };
 
-export type View = "overview" | "roadmap" | "career" | "projects" | "progress" | "health" | "finance" | "notes" | "guide";
+export type View = "assistant" | "overview" | "roadmap" | "career" | "projects" | "progress" | "health" | "finance" | "development" | "notes" | "guide";
 export type Mutation = { action: string; [key: string]: unknown };
 
 export function todayKey() {

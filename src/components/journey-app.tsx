@@ -2,25 +2,30 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
-import { LayoutDashboard, Route, BriefcaseBusiness, FolderKanban, HeartPulse, Wallet, NotebookPen, CircleHelp, Settings2, Search, Bell, ChevronLeft, ChevronDown, ArrowLeft, ArrowUpLeft, Plus, CalendarDays, Sparkles, Leaf, Target, Clock3, Check, Heart, ShieldCheck, Sprout, Menu, X, UserRound, Download, CheckCircle2, CircleAlert, Sunrise, Compass, FileText, BookOpen, Flame, Award, TrendingUp, Minus } from "lucide-react";
+import { LayoutDashboard, Route, BriefcaseBusiness, FolderKanban, HeartPulse, Wallet, NotebookPen, CircleHelp, Settings2, Search, Bell, ChevronLeft, ChevronDown, ArrowLeft, ArrowUpLeft, Plus, CalendarDays, Sparkles, Leaf, Target, Clock3, Check, Heart, ShieldCheck, Sprout, Menu, X, UserRound, Download, CheckCircle2, CircleAlert, Sunrise, Compass, FileText, BookOpen, Flame, Zap, Award, TrendingUp, Minus } from "lucide-react";
 import { categoryLabels, fa, todayKey, journeyDay, type Workspace, type View, type Mutation, type Note, type Task } from "@/lib/types";
 import { phases } from "@/lib/content";
 import { DailyCheckin, IconBox, Modal, Progress, type Mutate } from "@/components/ui";
 import { RoadmapView, CareerView, ProjectsView, HealthView, FinanceView, NotesView, GuideView, ProjectCard, ProjectDetails } from "@/components/views";
 import { ProgressView } from "@/components/progress";
+import { AssistantView } from "@/components/assistant";
+import { DevelopmentView } from "@/components/development";
 import { computeStreak, dayStats, dayKey, formatTime, goalFor, blockOf, timeBlocks, nextAction } from "@/lib/stats";
 
 const navigation = [
+  { id: "assistant" as View, title: "دستیار هوشمند", icon: Sparkles, badge: "جمینا" },
   { id: "overview" as View, title: "نمای کلی", icon: LayoutDashboard },
   { id: "roadmap" as View, title: "نقشه راه من", icon: Route, badge: "۹۰ روز" },
   { id: "career" as View, title: "مسیر شغلی", icon: BriefcaseBusiness },
   { id: "projects" as View, title: "پروژه‌های من", icon: FolderKanban },
   { id: "progress" as View, title: "پیشرفت من", icon: Flame },
+  { id: "development" as View, title: "چالش ۷۵ روزه", icon: Zap },
   { id: "health" as View, title: "حال خوب و عادت‌ها", icon: HeartPulse },
   { id: "finance" as View, title: "مدیریت مالی", icon: Wallet },
   { id: "notes" as View, title: "یادداشت‌های من", icon: NotebookPen },
 ];
 const viewTitles: Record<View, { title: string; subtitle: string }> = {
+  assistant: { title: "دستیار هوشمند", subtitle: "هرچه می‌خواهی را بگو؛ جمینا انجامش می‌دهد و منتظر تأیید تو می‌ماند." },
   overview: { title: "نمای کلی", subtitle: "لازم نیست همه مسیر رو بدونی؛ فعلاً فقط قدم بعدی." },
   roadmap: { title: "نقشه راه ۹۰ روزه تو", subtitle: "از ثبات امروز تا فرصت‌های فردا؛ یک مسیر واقعی و قابل تغییر." },
   career: { title: "مسیر شغلی تو", subtitle: "تجربه‌هایی که داری، می‌تونن نقطه شروع شغل بعدی باشن." },
@@ -28,6 +33,7 @@ const viewTitles: Record<View, { title: string; subtitle: string }> = {
   progress: { title: "پیشرفت من", subtitle: "نمودار روزانه، زنجیره نظمت و دستاوردهایی که باز کرده‌ای." },
   health: { title: "کمی بیشتر، کنار خودت باش", subtitle: "حال تو مهمه؛ حتی وقتی همه‌چیز طبق برنامه پیش نمی‌ره." },
   finance: { title: "قدم‌های کوچک، خیال آسوده‌تر", subtitle: "پولت را روشن‌تر ببین و متناسب با توانت، آرام جلو برو." },
+  development: { title: "چالش ۷۵ روزه روبه‌راه", subtitle: "برنامه‌ای استاندارد و سخت‌گیرانه برای بازگرداندن انضباط، آرامش و اختیار؛ هم روحی و روانی، هم مالی." },
   notes: { title: "فضایی برای فکرهای تو", subtitle: "از فکرهای پراکنده تا یک قدم روشن؛ بنویس تا سبک‌تر بشی." },
   guide: { title: "همراه مسیر تو", subtitle: "منطق این برنامه، منابع معتبر و چیزهایی که خوب است بدانی." },
 };
@@ -161,7 +167,9 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
           <section className="panel roadmap-preview"><div className="section-heading"><div><h2>نقشه راه تو، قدم به قدم <span className="tiny-label">۹۰ روز برای خودت</span></h2><p>اول ثبات، بعد ساختن، بعد رشد؛ بدون عجله و مقایسه.</p></div><button className="text-button" onClick={() => go("roadmap")}>دیدن مسیر کامل <ArrowLeft size={14} /></button></div><div className="phase-preview-grid">{phases.map((item, index) => <button key={item.title} className={`phase-preview ${index === 0 ? "current" : ""}`} onClick={() => { setPhase(index); go("roadmap"); }}><div className="phase-preview-top"><span className={`phase-step ${item.color}`}>{index === 0 ? <ShieldCheck size={19} /> : index === 1 ? <Sparkles size={19} /> : <Sprout size={19} />}</span><span>{item.period}</span>{index === 0 && <small><span /> شروع مسیر</small>}</div><h3>{item.title}</h3><div className="phase-preview-bottom"><p>{item.subtitle}</p><ArrowLeft size={15} /></div></button>)}</div></section>
           <section className="project-preview-section"><div className="section-heading"><div><h2>از ایده تا اولین نتیجه</h2><p>تجربه‌هات را به نمونه‌کارهای واقعی تبدیل کن.</p></div><button className="text-button" onClick={() => go("projects")}>همه پروژه‌ها <ArrowLeft size={14} /></button></div><div className="project-grid">{data.projects.map((project) => <ProjectCard project={project} key={project.id} compact onClick={() => setProjectId(project.id)} />)}</div></section>
         </>}
+        {view === "assistant" && <AssistantView mutate={mutate} busy={busy} go={go} applyWorkspace={setData} />}
         {view === "roadmap" && <RoadmapView data={data} mutate={mutate} busy={busy} selected={phase} onSelect={setPhase} />}
+        {view === "development" && <DevelopmentView data={data} mutate={mutate} busy={busy} />}
         {view === "career" && <CareerView data={data} mutate={mutate} onAdd={() => setModal("job")} onDelete={askDelete} busy={busy} />}
         {view === "projects" && <ProjectsView data={data} onProject={setProjectId} />}
         {view === "progress" && <ProgressView data={data} mutate={mutate} busy={busy} />}

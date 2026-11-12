@@ -31,3 +31,114 @@
 @media(max-width:700px){.commitment-main{flex-direction:column;align-items:flex-start;gap:17px}.streak-ring{width:100px;height:100px}.streak-center strong{font-size:27px}.streak-center span{font-size:8.5px}.commitment-side{flex-direction:column;gap:13px}.commitment-side>div{width:100%}.progress-chart{height:186px;gap:5px}.chart-bar-wrap{height:106px;max-width:28px}.chart-column{max-width:54px}.badge-grid{grid-template-columns:1fr}.schedule-guide{flex-direction:column;gap:13px;align-items:flex-start}.progress-stat strong{font-size:22px}.chart-legend{font-size:8px}}
 @media(max-width:480px){.next-action{flex-direction:column;align-items:flex-start;gap:11px}.next-action .button{width:100%}.time-block{padding:11px 12px 4px}.block-hint{display:none}.chart-bar-value{font-size:7.5px}.progress-chart{gap:4px}.chart-column{max-width:48px}.commitment-copy h2{font-size:14px}.commitment-copy>p{font-size:10px}.target-stepper{width:100%;justify-content:space-between}.commitment-actions{width:100%}.commitment-actions .button{flex:1}.progress-stats{gap:11px}.progress-stat{padding:16px 11px}.badge{padding:13px 14px;gap:11px}.badge-icon{width:33px;height:33px}.badge h3{font-size:11px}.badge p{font-size:9px}.block-chips>span{padding:7px 10px}.time-chip{padding:6px 9px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Gemini assistant and the 75-day discipline program */
+.assistant-panel{display:flex;flex-direction:column;gap:14px}
+.assistant-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.assistant-identity{display:flex;gap:12px;align-items:flex-start}
+.assistant-avatar{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#8a64b9,#6f4ca0);color:#fff;flex-shrink:0;box-shadow:0 6px 18px #8a64b955}
+.assistant-identity h2{font-size:15px;font-weight:700;color:var(--ink)}
+.assistant-identity p{font-size:10.5px;color:var(--muted);line-height:2;margin-top:3px;max-width:600px}
+.chat-scroll{background:#fbfafc;border:1px solid var(--line);border-radius:14px;padding:16px;height:52vh;min-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.chat-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;color:#a89bb8;margin:auto;max-width:460px}
+.chat-empty h3{font-size:14px;color:var(--ink)}
+.chat-empty p{font-size:10.5px;line-height:2}
+.suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;width:100%}
+.suggestion-card{display:flex;align-items:center;gap:8px;text-align:right;border:1px solid #e9e2f2;background:#fff;border-radius:12px;padding:10px 12px;font-size:10px;line-height:1.9;color:#6f6480;cursor:pointer;transition:border-color .15s,transform .15s}
+.suggestion-card:hover{border-color:var(--purple);transform:translateY(-1px)}
+.suggestion-card svg{color:var(--purple);flex-shrink:0}
+.chat-row{display:flex;gap:8px;max-width:84%}
+.chat-row.from-user{align-self:flex-end;flex-direction:row-reverse}
+.chat-row.from-model{align-self:flex-start}
+.chat-avatar{display:flex;align-items:center;justify-content:center;border-radius:50%;background:#f1ebf9;color:var(--purple);flex-shrink:0}
+.chat-avatar.small{width:28px;height:28px;margin-top:4px}
+.chat-bubble{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 13px;font-size:11.5px;line-height:2;color:var(--ink);box-shadow:0 1px 3px #3a2a4d0d;white-space:pre-line}
+.from-user .chat-bubble{background:#efe8f8;border-color:#e0d3ee;border-radius:16px 16px 4px 16px}
+.from-model .chat-bubble{border-radius:16px 16px 16px 4px}
+.performed-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.performed-chip{display:inline-flex;align-items:center;gap:4px;font-size:9px;background:#eef5ef;color:#4e7a5f;border:1px solid #d9e9de;border-radius:999px;padding:3px 9px}
+.confirm-card{margin-top:10px;background:#fdf8ec;border:1px solid #ecd9b0;border-radius:12px;padding:11px 13px}
+.confirm-card-title{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:#8a6a25}
+.confirm-card p{font-size:10px;color:#8a6a25;margin:6px 0 8px;line-height:1.9}
+.confirm-actions{display:flex;gap:8px}
+.confirm-status{display:inline-flex;align-items:center;gap:5px;font-size:9px;margin-top:9px;color:#4e7a5f;background:#eef5ef;border-radius:999px;padding:3px 10px}
+.confirm-status.cancelled{color:#8a6a25;background:#fdf8ec}
+.chat-bubble.typing{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:10.5px}
+.spin{animation:assistant-spin 1.1s linear infinite}
+@keyframes assistant-spin{to{transform:rotate(360deg)}}
+.chat-input-row{display:flex;gap:10px}
+.chat-input-row input{flex:1;height:47px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:#fff;color:var(--ink)}
+.chat-input-row input:focus{outline:2px solid #8a64b944;border-color:var(--purple)}
+.assistant-error{color:#a13b32;font-size:10.5px;background:#fdf0ef;border:1px solid #f2d3cf;border-radius:10px;padding:8px 12px;line-height:1.9}
+.chat-safety{margin:0}
+@media(max-width:700px){.suggestion-grid{grid-template-columns:1fr}.chat-row{max-width:100%}.assistant-identity p{display:none}}
+
+/* The 75-day discipline program */
+.gratitude-row{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+.gratitude-row textarea,.weekly-review textarea{border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff;resize:vertical;line-height:2;color:var(--ink);width:100%}
+.gratitude-row textarea:focus,.weekly-review textarea:focus{outline:2px solid #8a64b944;border-color:var(--purple)}
+.gratitude-row .button{align-self:flex-start}
+.section-heading.compact h3{font-size:12px}
+.rule-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.rule-row{display:flex;align-items:center;gap:12px;text-align:right;width:100%;background:#fbfafc;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;transition:border-color .15s,background .15s;font-family:inherit}
+.rule-row:hover{border-color:#d8cde8}
+.rule-row.done{background:#f2f8f3;border-color:#d5e6da}
+.rule-row.auto{cursor:default}
+.rule-checkbox{width:24px;height:24px;border-radius:8px;border:1.6px solid #cfc8da;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;transition:all .15s}
+.rule-row.done .rule-checkbox{background:var(--green);border-color:var(--green)}
+.rule-text{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rule-text strong{font-size:11px;color:var(--ink);font-weight:600;line-height:1.9}
+.rule-text small{font-size:9px;color:var(--muted);line-height:1.8}
+.rule-auto-pill{flex-shrink:0;white-space:nowrap}
+.program-14day{display:grid;grid-template-columns:repeat(14,1fr);gap:6px;margin:16px 0 6px}
+.day-cell{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:#fff;color:#b7b0c4}
+.day-cell.low{background:#faf6ee;border-color:#eadfc6;color:#a08a5a}
+.day-cell.half{background:#f3eef9;border-color:#e2d7ee;color:#7a6a92}
+.day-cell.full{background:#75a28b;border-color:#75a28b;color:#fff}
+.day-cell.today{outline:2px solid var(--purple);outline-offset:1px}
+.day-cell-percent{display:flex;align-items:center;font-size:8px;font-weight:700}
+.day-cell-weekday{font-size:8px}
+.delta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:4px}
+.delta-card{display:flex;gap:10px;align-items:center;background:#fbfafc;border:1px solid var(--line);border-radius:12px;padding:12px}
+.delta-icon{width:34px;height:34px;border-radius:10px;background:var(--purple-soft);color:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.delta-label{font-size:8.5px;color:var(--muted);line-height:1.7}
+.delta-card strong{font-size:13px;color:var(--ink);display:block;margin:2px 0}
+.delta-change{font-size:8.5px;color:#a89bb8;line-height:1.7;display:block}
+.delta-change.better{color:#4e8a63;font-weight:700}
+.delta-change.worse{color:#b0443c;font-weight:700}
+.review-questions{margin:0 20px;padding:0;display:flex;flex-direction:column;gap:8px;line-height:2.1;font-size:10.5px;color:#5d5470}
+.review-actions{display:flex;align-items:center;gap:12px;margin-top:10px}
+.program-sources{grid-template-columns:repeat(auto-fill,minmax(225px,1fr))}
+@media(max-width:900px){.delta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.program-14day{grid-template-columns:repeat(7,1fr)}}
+
+/* Monthly finance overview */
+.month-summary-chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.month-chip{display:flex;flex-direction:column;gap:3px;background:#fbfafc;border:1px solid var(--line);border-radius:10px;padding:9px 13px;font-size:9px;color:var(--muted)}
+.month-chip strong{font-size:11px;color:var(--ink)}
+.month-rows{display:flex;flex-direction:column;gap:4px}
+.month-row{display:grid;grid-template-columns:120px 1fr auto;gap:12px;align-items:center;padding:9px 11px;border-radius:11px;border:1px solid transparent}
+.month-row.current{background:#faf7fd;border-color:#ece4f5}
+.month-label{display:flex;align-items:center;gap:8px;font-size:10.5px;color:var(--ink)}
+.month-bars{display:flex;flex-direction:column;gap:3px}
+.month-bar{height:6px;border-radius:99px;background:#efecf3;overflow:hidden}
+.month-bar span{display:block;height:100%;border-radius:99px;min-width:2px}
+.month-bar.income span{background:var(--green)}
+.month-bar.expense span{background:var(--peach)}
+.month-bar.saving span{background:var(--purple)}
+.month-figures{display:flex;gap:13px;font-size:10px;white-space:nowrap}
+.fig-income{color:#4e8a63}
+.fig-expense{color:#b0443c}
+.fig-net.ok{color:#4e8a63;font-weight:700}
+.fig-net.bad{color:#b0443c;font-weight:700}
+.month-legend{display:flex;gap:14px;align-items:center;margin-top:11px;font-size:9px;color:var(--muted);flex-wrap:wrap}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-inline-end:5px;vertical-align:middle}
+.legend-dot.income{background:var(--green)}
+.legend-dot.expense{background:var(--peach)}
+.legend-dot.saving{background:var(--purple)}
+.month-legend-note{margin-inline-start:auto}
+.month-net-banner{display:flex;gap:12px;align-items:center;margin-top:12px;border-radius:12px;padding:12px 15px;line-height:2}
+.month-net-banner.ok{background:#f1f7f2;border:1px solid #d9e9de;color:#3d6b4c}
+.month-net-banner.bad{background:#fdf0ef;border:1px solid #f2d3cf;color:#8f3a32}
+.month-net-banner p{display:flex;flex-direction:column;margin:0}
+.month-net-banner span{font-size:9px;opacity:.9}
+@media(max-width:900px){.month-row{grid-template-columns:1fr;gap:6px}.month-figures{font-size:9px;gap:9px;flex-wrap:wrap;white-space:normal}.month-legend-note{margin-inline-start:0}}

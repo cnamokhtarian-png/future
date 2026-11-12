@@ -73,3 +73,10 @@ export const notes = robehrah.table("journey_notes", {
   body: text("body").notNull(),
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
+
+export const programDays = robehrah.table("journey_program_days", {
+  day: text("day").primaryKey(),
+  completed: jsonb("completed").$type<string[]>().notNull().default([]),
+  note: text("note").notNull().default(""),
+  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+});
