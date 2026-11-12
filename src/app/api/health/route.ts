@@ -22,8 +22,8 @@ async function probeModel(key: string, model: string): Promise<ProbeResult> {
       cache: "no-store",
     });
     if (response.ok) {
-      const data = (await response.json()) as { output_text?: string };
-      return { model, status: response.status, ok: true, message: (data.output_text || "").slice(0, 80) || "(no text)" };
+      const raw = await response.text();
+      return { model, status: response.status, ok: true, message: raw.slice(0, 500) };
     }
     let message = "";
     try {
