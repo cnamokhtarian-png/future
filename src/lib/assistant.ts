@@ -2,30 +2,228 @@ import "server-only";
 
 import { runAction } from "@/lib/actions";
 import { todayKey, fa, journeyDay, type Mutation, type Workspace } from "@/lib/types";
-import { programRules, programContext, effectiveCompleted, programStreak, parseTimestamp, monthKeyOf, monthLabelOf } from "@/lib/program";
+import {
+  programRules,
+  programContext,
+  effectiveCompleted,
+  programStreak,
+  parseTimestamp,
+  monthKeyOf,
+  monthLabelOf,
+} from "@/lib/program";
 
 // «دستیار هوشمند» — declarations, context builder and the tool executor for
 // the Gemini interactions in app/api/assistant/route.ts. Everything here is
 // server-only; the route itself only adapts HTTP <-> this module.
 
-const views = ["assistant", "overview", "roadmap", "career", "projects", "progress", "health", "finance", "development", "notes", "guide"] as const;
+const views = [
+  "assistant",
+  "overview",
+  "roadmap",
+  "career",
+  "projects",
+  "progress",
+  "health",
+  "finance",
+  "development",
+  "notes",
+  "guide",
+] as const;
 
 export const functionDeclarations = [
-  { name: "create_task", description: "ثبت یک قدم/کار جدید در برنامه امروز کاربر.", parameters: { type: "object", properties: { title: { type: "string", description: "عنوان قدم به فارسی" }, category: { type: "string", enum: ["career", "project", "health", "learning", "personal"], description: "دسته‌بندی قدم" }, minutes: { type: "number", description: "زمان تقریبی به دقیقه" }, time: { type: "string", description: "ساعت به شکل HH:MM (مثلاً 09:30) یا خالی" } }, required: ["title"] } },
-  { name: "toggle_task", description: "تیک زدن یا برداشتن تیک یک قدم امروز. می‌توانی id قدم بدهی یا بخشی از عنوان آن را؛ اگر چند قدم مطابق بود، از کاربر بپرس.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string", description: "بخشی از عنوان قدم (وقتی id نداری)" }, done: { type: "boolean", description: "اگر مشخص نیست، برعکس وضعیت فعلی اعمال می‌شود" } } } },
-  { name: "delete_task", description: "حذف یک قدم. هرگز بدون تأیید کاربر انجام نمی‌شود؛ اول درخواست را بفرست تا کاربر تأیید کند.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" } } } },
-  { name: "create_transaction", description: "ثبت یک درآمد، هزینه یا پس‌انداز (همیشه به تومان). برای خرج‌های مربوط به گربه‌ها (غذا، دام‌پزشک، وسایل) category را cats بفرست.", parameters: { type: "object", properties: { type: { type: "string", enum: ["income", "expense", "saving"] }, title: { type: "string", description: "شرح تراکنش" }, amount: { type: "number", description: "مبلغ به تومان (عدد صحیح مثبت)" }, category: { type: "string", enum: ["general", "cats"], description: "general عادی (پیش‌فرض)؛ cats هزینه‌های گربه‌ها" } }, required: ["type", "title", "amount"] } },
-  { name: "delete_transaction", description: "حذف یک تراکنش. هرگز بدون تأیید کاربر انجام نمی‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string", description: "بخشی از شرح تراکنش" } } } },
-  { name: "save_checkin", description: "ثبت چک‌این امروز کاربر (حال، عادت‌ها، خواب و سیگار). فقط فیلدهایی که کاربر گفته را بفرست؛ بقیه حفظ می‌شوند.", parameters: { type: "object", properties: { mood: { type: "number", description: "۱ خسته تا ۵ عالی" }, note: { type: "string" }, cannabisFree: { type: "boolean" }, alcoholFree: { type: "boolean" }, walked: { type: "boolean" }, sleepHours: { type: "number", description: "ساعت خواب در یک شبانه‌روز" }, cigarettes: { type: "number", description: "تعداد سیگار امروز (۰ یعنی هیچ)" } } } },
-  { name: "save_note", description: "ذخیره یا به‌روزرسانی یک یادداشت. بدون id، یادداشت تازه ساخته می‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" }, body: { type: "string" } }, required: ["title", "body"] } },
-  { name: "delete_note", description: "حذف یک یادداشت. هرگز بدون تأیید کاربر انجام نمی‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" } } } },
-  { name: "create_job_application", description: "ثبت یک فرصت شغلی/درخواستی که کاربر برایش اقدام کرده.", parameters: { type: "object", properties: { company: { type: "string" }, role: { type: "string" }, status: { type: "string", enum: ["planned", "applied", "interview", "waiting", "offer", "rejected"] }, url: { type: "string" }, note: { type: "string" } }, required: ["company", "role"] } },
-  { name: "update_job_status", description: "تغییر وضعیت پیگیری یک فرصت شغلی (مثلاً از «ارسال رزومه» به «مصاحبه»).", parameters: { type: "object", properties: { id: { type: "string" }, company: { type: "string", description: "نام شرکت (وقتی id نداری)" }, role: { type: "string", description: "عنوان شغل (اختیاری)" }, status: { type: "string", enum: ["planned", "applied", "interview", "waiting", "offer", "rejected"] } }, required: ["status"] } },
-  { name: "delete_job", description: "حذف یک فرصت شغلی. هرگز بدون تأیید کاربر انجام نمی‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, company: { type: "string" } } } },
-  { name: "toggle_project_step", description: "تیک زدن یا برداشتن تیک یکی از مراحل یک پروژه.", parameters: { type: "object", properties: { project: { type: "string", description: "نام پروژه یا id آن (مثلاً pearl)" }, step: { type: "string", description: "بخشی از عنوان مرحله یا شماره آن (از ۱)" }, done: { type: "boolean" } }, required: ["project", "done"] } },
-  { name: "update_settings", description: "تغییر تنظیمات شخصی: نام نمایشی، هدف صندوق اضطراری (تومان) یا تعهد روزانه. فقط فیلدهای گفته‌شده را بفرست.", parameters: { type: "object", properties: { name: { type: "string" }, savingGoal: { type: "number" }, dailyTarget: { type: "number", description: "تعداد قدم متعهد روزانه" } } } },
-  { name: "log_program_rules", description: "ثبت قوانینِ انجام‌شده‌ی «چالش ۷۵ روزه» امروز. فهرست کامل قوانین انجام‌شده امروز را بفرست (قوانین خودکار مثل clean/walk/finance خودشان از چک‌این و تراکنش‌ها حساب می‌شوند ولی بودنشان در فهرست اشکالی ندارد).", parameters: { type: "object", properties: { completed: { type: "array", items: { type: "string", enum: ["wake", "workout", "water", "read", "silent", "clean", "walk", "deepwork", "finance", "gratitude", "nutrition", "sleep", "social"] }, description: "شناسه قوانین انجام‌شده امروز" }, note: { type: "string", description: "یک جمله درباره امروز (اختیاری)" } }, required: ["completed"] } },
-  { name: "navigate_to", description: "بازکردن یک بخش سایت برای کاربر (مثلاً بعد از دیدن گزارش).", parameters: { type: "object", properties: { view: { type: "string", enum: views } }, required: ["view"] } },
+  {
+    name: "create_task",
+    description: "ثبت یک قدم/کار جدید در برنامه امروز کاربر.",
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "عنوان قدم به فارسی" },
+        category: {
+          type: "string",
+          enum: ["career", "project", "health", "learning", "personal"],
+          description: "دسته‌بندی قدم",
+        },
+        minutes: { type: "number", description: "زمان تقریبی به دقیقه" },
+        time: { type: "string", description: "ساعت به شکل HH:MM (مثلاً 09:30) یا خالی" },
+      },
+      required: ["title"],
+    },
+  },
+  {
+    name: "toggle_task",
+    description:
+      "تیک زدن یا برداشتن تیک یک قدم امروز. می‌توانی id قدم بدهی یا بخشی از عنوان آن را؛ اگر چند قدم مطابق بود، از کاربر بپرس.",
+    parameters: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        title: { type: "string", description: "بخشی از عنوان قدم (وقتی id نداری)" },
+        done: { type: "boolean", description: "اگر مشخص نیست، برعکس وضعیت فعلی اعمال می‌شود" },
+      },
+    },
+  },
+  {
+    name: "delete_task",
+    description: "حذف یک قدم. هرگز بدون تأیید کاربر انجام نمی‌شود؛ اول درخواست را بفرست تا کاربر تأیید کند.",
+    parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" } } },
+  },
+  {
+    name: "create_transaction",
+    description:
+      "ثبت یک درآمد، هزینه یا پس‌انداز (همیشه به تومان). برای خرج‌های مربوط به گربه‌ها (غذا، دام‌پزشک، وسایل) category را cats بفرست.",
+    parameters: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["income", "expense", "saving"] },
+        title: { type: "string", description: "شرح تراکنش" },
+        amount: { type: "number", description: "مبلغ به تومان (عدد صحیح مثبت)" },
+        category: {
+          type: "string",
+          enum: ["general", "cats"],
+          description: "general عادی (پیش‌فرض)؛ cats هزینه‌های گربه‌ها",
+        },
+      },
+      required: ["type", "title", "amount"],
+    },
+  },
+  {
+    name: "delete_transaction",
+    description: "حذف یک تراکنش. هرگز بدون تأیید کاربر انجام نمی‌شود.",
+    parameters: {
+      type: "object",
+      properties: { id: { type: "string" }, title: { type: "string", description: "بخشی از شرح تراکنش" } },
+    },
+  },
+  {
+    name: "save_checkin",
+    description:
+      "ثبت چک‌این امروز کاربر (حال، عادت‌ها، خواب و سیگار). فقط فیلدهایی که کاربر گفته را بفرست؛ بقیه حفظ می‌شوند.",
+    parameters: {
+      type: "object",
+      properties: {
+        mood: { type: "number", description: "۱ خسته تا ۵ عالی" },
+        note: { type: "string" },
+        cannabisFree: { type: "boolean" },
+        alcoholFree: { type: "boolean" },
+        walked: { type: "boolean" },
+        sleepHours: { type: "number", description: "ساعت خواب در یک شبانه‌روز" },
+        cigarettes: { type: "number", description: "تعداد سیگار امروز (۰ یعنی هیچ)" },
+      },
+    },
+  },
+  {
+    name: "save_note",
+    description: "ذخیره یا به‌روزرسانی یک یادداشت. بدون id، یادداشت تازه ساخته می‌شود.",
+    parameters: {
+      type: "object",
+      properties: { id: { type: "string" }, title: { type: "string" }, body: { type: "string" } },
+      required: ["title", "body"],
+    },
+  },
+  {
+    name: "delete_note",
+    description: "حذف یک یادداشت. هرگز بدون تأیید کاربر انجام نمی‌شود.",
+    parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" } } },
+  },
+  {
+    name: "create_job_application",
+    description: "ثبت یک فرصت شغلی/درخواستی که کاربر برایش اقدام کرده.",
+    parameters: {
+      type: "object",
+      properties: {
+        company: { type: "string" },
+        role: { type: "string" },
+        status: { type: "string", enum: ["planned", "applied", "interview", "waiting", "offer", "rejected"] },
+        url: { type: "string" },
+        note: { type: "string" },
+      },
+      required: ["company", "role"],
+    },
+  },
+  {
+    name: "update_job_status",
+    description: "تغییر وضعیت پیگیری یک فرصت شغلی (مثلاً از «ارسال رزومه» به «مصاحبه»).",
+    parameters: {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        company: { type: "string", description: "نام شرکت (وقتی id نداری)" },
+        role: { type: "string", description: "عنوان شغل (اختیاری)" },
+        status: { type: "string", enum: ["planned", "applied", "interview", "waiting", "offer", "rejected"] },
+      },
+      required: ["status"],
+    },
+  },
+  {
+    name: "delete_job",
+    description: "حذف یک فرصت شغلی. هرگز بدون تأیید کاربر انجام نمی‌شود.",
+    parameters: { type: "object", properties: { id: { type: "string" }, company: { type: "string" } } },
+  },
+  {
+    name: "toggle_project_step",
+    description: "تیک زدن یا برداشتن تیک یکی از مراحل یک پروژه.",
+    parameters: {
+      type: "object",
+      properties: {
+        project: { type: "string", description: "نام پروژه یا id آن (مثلاً pearl)" },
+        step: { type: "string", description: "بخشی از عنوان مرحله یا شماره آن (از ۱)" },
+        done: { type: "boolean" },
+      },
+      required: ["project", "done"],
+    },
+  },
+  {
+    name: "update_settings",
+    description:
+      "تغییر تنظیمات شخصی: نام نمایشی، هدف صندوق اضطراری (تومان) یا تعهد روزانه. فقط فیلدهای گفته‌شده را بفرست.",
+    parameters: {
+      type: "object",
+      properties: {
+        name: { type: "string" },
+        savingGoal: { type: "number" },
+        dailyTarget: { type: "number", description: "تعداد قدم متعهد روزانه" },
+      },
+    },
+  },
+  {
+    name: "log_program_rules",
+    description:
+      "ثبت قوانینِ انجام‌شده‌ی «چالش ۷۵ روزه» امروز. فهرست کامل قوانین انجام‌شده امروز را بفرست (قوانین خودکار مثل clean/walk/finance خودشان از چک‌این و تراکنش‌ها حساب می‌شوند ولی بودنشان در فهرست اشکالی ندارد).",
+    parameters: {
+      type: "object",
+      properties: {
+        completed: {
+          type: "array",
+          items: {
+            type: "string",
+            enum: [
+              "wake",
+              "workout",
+              "water",
+              "read",
+              "silent",
+              "clean",
+              "walk",
+              "deepwork",
+              "finance",
+              "gratitude",
+              "nutrition",
+              "sleep",
+              "social",
+            ],
+          },
+          description: "شناسه قوانین انجام‌شده امروز",
+        },
+        note: { type: "string", description: "یک جمله درباره امروز (اختیاری)" },
+      },
+      required: ["completed"],
+    },
+  },
+  {
+    name: "navigate_to",
+    description: "بازکردن یک بخش سایت برای کاربر (مثلاً بعد از دیدن گزارش).",
+    parameters: { type: "object", properties: { view: { type: "string", enum: views } }, required: ["view"] },
+  },
 ];
 
 const norm = (value: string) => value.trim().toLowerCase().replace(/ي/g, "ی").replace(/ك/g, "ک").replace(/\s+/g, " ");
@@ -34,7 +232,10 @@ function pickOne<T>(items: T[], query: string, label: (item: T) => string): { it
   const q = norm(query);
   const matches = items.filter((item) => norm(label(item)).includes(q));
   if (matches.length === 1) return { item: matches[0] };
-  if (matches.length > 1) return { error: `چند مورد مطابق «${query}» پیدا شد: ${matches.slice(0, 5).map(label).join("، ")}. کدام را منظور داشتی؟` };
+  if (matches.length > 1)
+    return {
+      error: `چند مورد مطابق «${query}» پیدا شد: ${matches.slice(0, 5).map(label).join("، ")}. کدام را منظور داشتی؟`,
+    };
   return { error: `چیزی مطابق «${query}» پیدا نشد.` };
 }
 
@@ -67,10 +268,14 @@ export function buildContext(workspace: Workspace) {
   }
   const currentMonthKey = monthKeyFromNow(0);
   const currentMonth = monthTotals.get(currentMonthKey) || { income: 0, expense: 0, saving: 0 };
-  const monthLines = [...monthTotals.entries()].sort().reverse().slice(0, 4).map(([key, value]) => {
-    const net = value.income - value.expense - value.saving;
-    return `- ${monthLabelOf(key)}: درآمد ${fa(value.income)} | هزینه ${fa(value.expense)} | پس‌انداز ${fa(value.saving)} | مانده ${fa(net)} (تومان)`;
-  });
+  const monthLines = [...monthTotals.entries()]
+    .sort()
+    .reverse()
+    .slice(0, 4)
+    .map(([key, value]) => {
+      const net = value.income - value.expense - value.saving;
+      return `- ${monthLabelOf(key)}: درآمد ${fa(value.income)} | هزینه ${fa(value.expense)} | پس‌انداز ${fa(value.saving)} | مانده ${fa(net)} (تومان)`;
+    });
 
   // گربه‌ها: مجموع خرج‌های این ماه با برچسب cats
   let catMonthTotal = 0;
@@ -86,18 +291,23 @@ export function buildContext(workspace: Workspace) {
   const planTotal = todayPlanItems.length;
   const planLines: string[] = todayPlanItems.slice(0, 20).map((item) => {
     const flags: string[] = [];
-    if (item.done) flags.push("انجام شد"); else flags.push("انجام نشد");
+    if (item.done) flags.push("انجام شد");
+    else flags.push("انجام نشد");
     if (item.base && item.base.title !== item.title) flags.push(`جایگزین «${item.base.title.slice(0, 60)}»`);
     if (item.note.trim()) flags.push(`یادداشت: ${item.note.trim().slice(0, 80)}`);
     return `- ${item.time} ${item.title} [${flags.join(" | ")}]`;
   });
-  for (const item of workspace.planItems.filter((entry) => entry.day === today && entry.dropped).slice(0, 6)) planLines.push(`- ${item.time} ${item.title} [از برنامه کنار گذاشته شد]`);
+  for (const item of workspace.planItems.filter((entry) => entry.day === today && entry.dropped).slice(0, 6))
+    planLines.push(`- ${item.time} ${item.title} [از برنامه کنار گذاشته شد]`);
 
   const projects = workspace.projects.map((project) => {
     const done = project.steps.filter((step) => step.done).length;
     return `- ${project.name} (${project.id}): ${done}/${project.steps.length} مرحله — وضعیت: ${project.status === "active" ? "در اولویت" : project.status === "queued" ? "بعدی" : "آزمایشی/متوقف"}`;
   });
-  const jobCounts = workspace.applications.reduce<Record<string, number>>((acc, job) => { acc[job.status] = (acc[job.status] || 0) + 1; return acc; }, {});
+  const jobCounts = workspace.applications.reduce<Record<string, number>>((acc, job) => {
+    acc[job.status] = (acc[job.status] || 0) + 1;
+    return acc;
+  }, {});
   const jalali = new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", dateStyle: "full" }).format(new Date());
 
   return [
@@ -106,16 +316,37 @@ export function buildContext(workspace: Workspace) {
     `تعهد روزانه: ${fa(workspace.settings.dailyTarget)} قدم | هدف صندوق اضطراری: ${fa(workspace.settings.savingGoal)} تومان`,
     ``,
     `قدم‌های امروز (${fa(todayTasks.filter((t) => t.done).length)} از ${fa(todayTasks.length)} انجام شده):`,
-    ...(todayTasks.length ? todayTasks.map((task) => `- id=${task.id} | ${task.done ? "✅" : "⬜"} ${task.title} (${fa(task.minutes)} دقیقه${task.time ? `، ساعت ${task.time}` : ""})`) : ["- هنوز قدمی برای امروز ثبت نشده"]),
+    ...(todayTasks.length
+      ? todayTasks.map(
+          (task) =>
+            `- id=${task.id} | ${task.done ? "✅" : "⬜"} ${task.title} (${fa(task.minutes)} دقیقه${task.time ? `، ساعت ${task.time}` : ""})`,
+        )
+      : ["- هنوز قدمی برای امروز ثبت نشده"]),
     ``,
     `چک‌این امروز: ${todayCheckin ? `حال ${fa(todayCheckin.mood)} از ۵${todayCheckin.sleepHours != null ? `، خواب ${fa(todayCheckin.sleepHours)} ساعت` : ""}${todayCheckin.cigarettes != null ? `، سیگار ${fa(todayCheckin.cigarettes)} نخ` : ""}${todayCheckin.cannabisFree ? "، بدون حشیش" : ""}${todayCheckin.alcoholFree ? "، بدون الکل" : ""}${todayCheckin.walked ? "، پیاده‌روی کرده" : ""}` : "ثبت نشده"}`,
     `شناسه قوانین چالش: wake=بیداری قبل ۷ صبح، workout=۴۵ دقیقه ورزش، water=۲٫۵ لیتر آب، read=۱۰ صفحه کتاب، silent=۱۰ دقیقه سکوت/ذکر، clean=بدون سیگار/الکل/مواد، walk=۱۵ دقیقه پیاده‌روی، deepwork=بلوک کار عمیق، finance=ثبت کامل دخل و خرج، gratitude=شکرگزاری شبانه، nutrition=تغذیه واقعی، sleep=خواب قبل ۱۲ شب، social=یک تعامل اجتماعی واقعی`,
-    `وضعیت چالش ۷۵ روزه امروز (${fa(completedToday.length)} از ${fa(programRules.length)} قانون): ${completedToday.length ? completedToday.join("، ") : "هنوز چیزی تیک نخورده"} | زنجیره فعلی: ${fa(challenge.streak)} روز | بهترین: ${fa(challenge.best)} روز`,,
-    workspace.dailyReviews.length ? `جمع‌بندی روزهای بسته‌شدهٔ اخیر (روز به روز):\n${workspace.dailyReviews.slice(0, 3).map((review) => `- ${review.day}: ${fa(review.done)} از ${fa(review.total)} (${fa(review.percent)}٪)${review.summary ? ` — ${review.summary.slice(0, 160)}` : ""}`).join("\n")}` : `هنوز روزی بسته و جمع‌بندی نشده.`,
-    planLines.length ? `برنامهٔ امروز (${fa(planDone)} از ${fa(planTotal)} آیتم انجام‌شده):` : `برنامه‌ای برای امروز ثبت نشده.`,
+    `وضعیت چالش ۷۵ روزه امروز (${fa(completedToday.length)} از ${fa(programRules.length)} قانون): ${completedToday.length ? completedToday.join("، ") : "هنوز چیزی تیک نخورده"} | زنجیره فعلی: ${fa(challenge.streak)} روز | بهترین: ${fa(challenge.best)} روز`,
+    ,
+    workspace.dailyReviews.length
+      ? `جمع‌بندی روزهای بسته‌شدهٔ اخیر (روز به روز):\n${workspace.dailyReviews
+          .slice(0, 3)
+          .map(
+            (review) =>
+              `- ${review.day}: ${fa(review.done)} از ${fa(review.total)} (${fa(review.percent)}٪)${review.summary ? ` — ${review.summary.slice(0, 160)}` : ""}`,
+          )
+          .join("\n")}`
+      : `هنوز روزی بسته و جمع‌بندی نشده.`,
+    planLines.length
+      ? `برنامهٔ امروز (${fa(planDone)} از ${fa(planTotal)} آیتم انجام‌شده):`
+      : `برنامه‌ای برای امروز ثبت نشده.`,
     ...planLines,
     `مواجهه‌های اجتماعی (کل ${fa(workspace.socialLogs.length)} مورد):`,
-    ...workspace.socialLogs.slice(0, 4).map((log) => `- ${log.day} «${log.title.slice(0, 60)}» — پیش‌بینی ${fa(log.prediction)} → واقعیت ${fa(log.outcome)}`),
+    ...workspace.socialLogs
+      .slice(0, 4)
+      .map(
+        (log) =>
+          `- ${log.day} «${log.title.slice(0, 60)}» — پیش‌بینی ${fa(log.prediction)} → واقعیت ${fa(log.outcome)}`,
+      ),
     workspace.socialLogs.length === 0 ? "- هنوز هیچ مواجهه‌ای ثبت نشده؛ تب «پیوند اجتماعی» را ببین" : "",
     catMonthTotal > 0 ? `هزینهٔ گربه‌ها این ماه: ${fa(catMonthTotal)} تومان (ثبت با برچسب «گربه‌ها»)` : ``,
     ``,
@@ -126,7 +357,11 @@ export function buildContext(workspace: Workspace) {
     `پروژه‌ها:`,
     ...projects,
     ``,
-    `فرصت‌های شغلی: ${Object.entries(jobCounts).map(([status, count]) => `${status}: ${fa(count)}`).join("، ") || "ثبت نشده"} | یادداشت‌ها: ${fa(workspace.notes.length)}`,
+    `فرصت‌های شغلی: ${
+      Object.entries(jobCounts)
+        .map(([status, count]) => `${status}: ${fa(count)}`)
+        .join("، ") || "ثبت نشده"
+    } | یادداشت‌ها: ${fa(workspace.notes.length)}`,
     `تراکنش امروز: ${fa(context.todayTransactions.length)} مورد`,
   ].join("\n");
 }
@@ -162,12 +397,16 @@ function resolveTask(workspace: Workspace, input: Record<string, unknown>): { id
   if (typeof input.id === "string" && input.id.trim()) return { id: input.id.trim() };
   const today = todayKey();
   const todayTasks = workspace.tasks.filter((task) => task.day === today);
-  if (typeof input.title !== "string" || !input.title.trim()) return { error: "کدام قدم؟ id یا بخشی از عنوانش را بفرست." };
+  if (typeof input.title !== "string" || !input.title.trim())
+    return { error: "کدام قدم؟ id یا بخشی از عنوانش را بفرست." };
   const found = pickOne(todayTasks, input.title, (task) => task.title);
   return "item" in found ? { id: found.item.id } : found;
 }
 
-function resolveTransaction(workspace: Workspace, input: Record<string, unknown>): { id: string; label: string } | { error: string } {
+function resolveTransaction(
+  workspace: Workspace,
+  input: Record<string, unknown>,
+): { id: string; label: string } | { error: string } {
   if (typeof input.id === "string" && input.id.trim()) {
     const found = workspace.transactions.find((item) => item.id === input.id);
     return { id: input.id.trim(), label: found?.title || "این تراکنش" };
@@ -177,17 +416,24 @@ function resolveTransaction(workspace: Workspace, input: Record<string, unknown>
   return "item" in found ? { id: found.item.id, label: found.item.title } : found;
 }
 
-function resolveNote(workspace: Workspace, input: Record<string, unknown>): { id: string; label: string } | { error: string } {
+function resolveNote(
+  workspace: Workspace,
+  input: Record<string, unknown>,
+): { id: string; label: string } | { error: string } {
   if (typeof input.id === "string" && input.id.trim()) {
     const found = workspace.notes.find((item) => item.id === input.id);
     return { id: input.id.trim(), label: found?.title || "این یادداشت" };
   }
-  if (typeof input.title !== "string" || !input.title.trim()) return { error: "کدام یادداشت؟ بخشی از عنوانش را بفرست." };
+  if (typeof input.title !== "string" || !input.title.trim())
+    return { error: "کدام یادداشت؟ بخشی از عنوانش را بفرست." };
   const found = pickOne(workspace.notes, input.title, (item) => item.title);
   return "item" in found ? { id: found.item.id, label: found.item.title } : found;
 }
 
-function resolveJob(workspace: Workspace, input: Record<string, unknown>): { id: string; label: string } | { error: string } {
+function resolveJob(
+  workspace: Workspace,
+  input: Record<string, unknown>,
+): { id: string; label: string } | { error: string } {
   if (typeof input.id === "string" && input.id.trim()) {
     const found = workspace.applications.find((item) => item.id === input.id);
     return { id: input.id.trim(), label: found ? `${found.role} · ${found.company}` : "این فرصت" };
@@ -204,11 +450,23 @@ export type ToolOutcome =
   | { kind: "error"; error: string }
   | { kind: "navigate"; view: string };
 
-export async function executeTool(name: string, args: Record<string, unknown>, workspace: Workspace): Promise<ToolOutcome> {
+export async function executeTool(
+  name: string,
+  args: Record<string, unknown>,
+  workspace: Workspace,
+): Promise<ToolOutcome> {
   switch (name) {
     case "create_task": {
-      const result = await runAction({ action: "task.create", title: args.title, category: typeof args.category === "string" ? args.category : "personal", minutes: typeof args.minutes === "number" && Number.isFinite(args.minutes) ? Math.trunc(args.minutes) : 15, time: typeof args.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(args.time) ? args.time : null });
-      return result.ok ? { kind: "executed", label: `ثبت قدم «${String(args.title || "")}»` } : { kind: "error", error: result.error };
+      const result = await runAction({
+        action: "task.create",
+        title: args.title,
+        category: typeof args.category === "string" ? args.category : "personal",
+        minutes: typeof args.minutes === "number" && Number.isFinite(args.minutes) ? Math.trunc(args.minutes) : 15,
+        time: typeof args.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(args.time) ? args.time : null,
+      });
+      return result.ok
+        ? { kind: "executed", label: `ثبت قدم «${String(args.title || "")}»` }
+        : { kind: "error", error: result.error };
     }
     case "toggle_task": {
       const resolved = resolveTask(workspace, args);
@@ -217,34 +475,57 @@ export async function executeTool(name: string, args: Record<string, unknown>, w
       if (!task) return { kind: "error", error: "این قدم پیدا نشد." };
       const done = typeof args.done === "boolean" ? args.done : !task.done;
       const result = await runAction({ action: "task.toggle", id: resolved.id, done });
-      return result.ok ? { kind: "executed", label: `${done ? "تیک زدن" : "برداشتن تیک"} «${task.title}»` } : { kind: "error", error: result.error };
+      return result.ok
+        ? { kind: "executed", label: `${done ? "تیک زدن" : "برداشتن تیک"} «${task.title}»` }
+        : { kind: "error", error: result.error };
     }
     case "delete_task": {
       const resolved = resolveTask(workspace, args);
       if ("error" in resolved) return { kind: "error", error: resolved.error };
       const task = workspace.tasks.find((item) => item.id === resolved.id);
-      return { kind: "confirm", label: `حذف قدم «${task?.title || resolved.id}»`, action: { action: "task.delete", id: resolved.id } };
+      return {
+        kind: "confirm",
+        label: `حذف قدم «${task?.title || resolved.id}»`,
+        action: { action: "task.delete", id: resolved.id },
+      };
     }
     case "create_transaction": {
       const type = typeof args.type === "string" ? args.type : "";
-      if (!["income", "expense", "saving"].includes(type)) return { kind: "error", error: "نوع تراکنش باید income، expense یا saving باشد." };
+      if (!["income", "expense", "saving"].includes(type))
+        return { kind: "error", error: "نوع تراکنش باید income، expense یا saving باشد." };
       const amount = typeof args.amount === "number" ? Math.trunc(args.amount) : Number(args.amount);
-      if (!Number.isFinite(amount) || amount <= 0) return { kind: "error", error: "مبلغ باید عددی مثبت (به تومان) باشد." };
+      if (!Number.isFinite(amount) || amount <= 0)
+        return { kind: "error", error: "مبلغ باید عددی مثبت (به تومان) باشد." };
       const category = args.category === "cats" ? "cats" : "general";
-      const result = await runAction({ action: "finance.create", title: String(args.title || "").trim() || "تراکنش", amount, type, category });
+      const result = await runAction({
+        action: "finance.create",
+        title: String(args.title || "").trim() || "تراکنش",
+        amount,
+        type,
+        category,
+      });
       const typeLabel = type === "income" ? "درآمد" : type === "expense" ? "هزینه" : "پس‌انداز";
       const catNote = category === "cats" ? " (گربه‌ها)" : "";
-      return result.ok ? { kind: "executed", label: `ثبت ${typeLabel} ${fa(amount)} تومان${catNote}` } : { kind: "error", error: result.error };
+      return result.ok
+        ? { kind: "executed", label: `ثبت ${typeLabel} ${fa(amount)} تومان${catNote}` }
+        : { kind: "error", error: result.error };
     }
     case "delete_transaction": {
       const resolved = resolveTransaction(workspace, args);
       if ("error" in resolved) return { kind: "error", error: resolved.error };
-      return { kind: "confirm", label: `حذف تراکنش «${resolved.label}»`, action: { action: "finance.delete", id: resolved.id } };
+      return {
+        kind: "confirm",
+        label: `حذف تراکنش «${resolved.label}»`,
+        action: { action: "finance.delete", id: resolved.id },
+      };
     }
     case "save_checkin": {
       const today = todayKey();
       const existing = workspace.checkins.find((entry) => entry.day === today);
-      const mood = typeof args.mood === "number" && args.mood >= 1 && args.mood <= 5 ? Math.trunc(args.mood) : existing?.mood ?? 3;
+      const mood =
+        typeof args.mood === "number" && args.mood >= 1 && args.mood <= 5
+          ? Math.trunc(args.mood)
+          : (existing?.mood ?? 3);
       const result = await runAction({
         action: "checkin.save",
         mood,
@@ -252,36 +533,68 @@ export async function executeTool(name: string, args: Record<string, unknown>, w
         cannabisFree: typeof args.cannabisFree === "boolean" ? args.cannabisFree : existing?.cannabisFree,
         alcoholFree: typeof args.alcoholFree === "boolean" ? args.alcoholFree : existing?.alcoholFree,
         walked: typeof args.walked === "boolean" ? args.walked : existing?.walked,
-        sleepHours: typeof args.sleepHours === "number" && Number.isFinite(args.sleepHours) ? Math.trunc(args.sleepHours) : existing?.sleepHours ?? null,
-        cigarettes: typeof args.cigarettes === "number" && Number.isFinite(args.cigarettes) ? Math.trunc(args.cigarettes) : existing?.cigarettes ?? null,
+        sleepHours:
+          typeof args.sleepHours === "number" && Number.isFinite(args.sleepHours)
+            ? Math.trunc(args.sleepHours)
+            : (existing?.sleepHours ?? null),
+        cigarettes:
+          typeof args.cigarettes === "number" && Number.isFinite(args.cigarettes)
+            ? Math.trunc(args.cigarettes)
+            : (existing?.cigarettes ?? null),
       });
       return result.ok ? { kind: "executed", label: "ثبت چک‌این امروز" } : { kind: "error", error: result.error };
     }
     case "save_note": {
-      const result = await runAction({ action: "note.save", id: typeof args.id === "string" && args.id.trim() ? args.id.trim() : undefined, title: String(args.title || "").trim() || `یادداشت ${todayKey()}`, body: String(args.body || "").trim() || "…" });
-      return result.ok ? { kind: "executed", label: `ذخیره یادداشت «${String(args.title || "")}»` } : { kind: "error", error: result.error };
+      const result = await runAction({
+        action: "note.save",
+        id: typeof args.id === "string" && args.id.trim() ? args.id.trim() : undefined,
+        title: String(args.title || "").trim() || `یادداشت ${todayKey()}`,
+        body: String(args.body || "").trim() || "…",
+      });
+      return result.ok
+        ? { kind: "executed", label: `ذخیره یادداشت «${String(args.title || "")}»` }
+        : { kind: "error", error: result.error };
     }
     case "delete_note": {
       const resolved = resolveNote(workspace, args);
       if ("error" in resolved) return { kind: "error", error: resolved.error };
-      return { kind: "confirm", label: `حذف یادداشت «${resolved.label}»`, action: { action: "note.delete", id: resolved.id } };
+      return {
+        kind: "confirm",
+        label: `حذف یادداشت «${resolved.label}»`,
+        action: { action: "note.delete", id: resolved.id },
+      };
     }
     case "create_job_application": {
       const status = typeof args.status === "string" ? args.status : "applied";
-      const result = await runAction({ action: "job.create", company: String(args.company || "").trim(), role: String(args.role || "").trim(), status, url: typeof args.url === "string" ? args.url : "", note: typeof args.note === "string" ? args.note : "" });
-      return result.ok ? { kind: "executed", label: `ثبت فرصت «${String(args.role || "")} · ${String(args.company || "")}»` } : { kind: "error", error: result.error };
+      const result = await runAction({
+        action: "job.create",
+        company: String(args.company || "").trim(),
+        role: String(args.role || "").trim(),
+        status,
+        url: typeof args.url === "string" ? args.url : "",
+        note: typeof args.note === "string" ? args.note : "",
+      });
+      return result.ok
+        ? { kind: "executed", label: `ثبت فرصت «${String(args.role || "")} · ${String(args.company || "")}»` }
+        : { kind: "error", error: result.error };
     }
     case "update_job_status": {
       const resolved = resolveJob(workspace, args);
       if ("error" in resolved) return { kind: "error", error: resolved.error };
       const status = typeof args.status === "string" ? args.status : "";
       const result = await runAction({ action: "job.update", id: resolved.id, status });
-      return result.ok ? { kind: "executed", label: `به‌روزرسانی «${resolved.label}»` } : { kind: "error", error: result.error };
+      return result.ok
+        ? { kind: "executed", label: `به‌روزرسانی «${resolved.label}»` }
+        : { kind: "error", error: result.error };
     }
     case "delete_job": {
       const resolved = resolveJob(workspace, args);
       if ("error" in resolved) return { kind: "error", error: resolved.error };
-      return { kind: "confirm", label: `حذف فرصت «${resolved.label}»`, action: { action: "job.delete", id: resolved.id } };
+      return {
+        kind: "confirm",
+        label: `حذف فرصت «${resolved.label}»`,
+        action: { action: "job.delete", id: resolved.id },
+      };
     }
     case "toggle_project_step": {
       const query = typeof args.project === "string" ? args.project : "";
@@ -295,10 +608,16 @@ export async function executeTool(name: string, args: Record<string, unknown>, w
         const matched = project.steps.findIndex((step) => norm(step.title).includes(norm(stepArg)));
         if (matched >= 0) index = matched;
       }
-      if (!Number.isInteger(index) || index < 0 || index >= project.steps.length) return { kind: "error", error: `مرحله پیدا نشد. مراحل «${project.name}»: ${project.steps.map((step, i) => `${fa(i + 1)}) ${step.title}`).join("، ")}` };
+      if (!Number.isInteger(index) || index < 0 || index >= project.steps.length)
+        return {
+          kind: "error",
+          error: `مرحله پیدا نشد. مراحل «${project.name}»: ${project.steps.map((step, i) => `${fa(i + 1)}) ${step.title}`).join("، ")}`,
+        };
       const done = Boolean(args.done);
       const result = await runAction({ action: "project.step", id: project.id, index, done });
-      return result.ok ? { kind: "executed", label: `${done ? "تیک زدن" : "برداشتن تیک"} مرحله «${project.steps[index].title}»` } : { kind: "error", error: result.error };
+      return result.ok
+        ? { kind: "executed", label: `${done ? "تیک زدن" : "برداشتن تیک"} مرحله «${project.steps[index].title}»` }
+        : { kind: "error", error: result.error };
     }
     case "update_settings": {
       const current = workspace.settings;
@@ -306,13 +625,21 @@ export async function executeTool(name: string, args: Record<string, unknown>, w
         action: "settings.update",
         name: typeof args.name === "string" && args.name.trim() ? args.name.trim() : current.name,
         startedOn: current.startedOn,
-        savingGoal: typeof args.savingGoal === "number" && Number.isFinite(args.savingGoal) && args.savingGoal > 0 ? Math.trunc(args.savingGoal) : current.savingGoal,
-        dailyTarget: typeof args.dailyTarget === "number" && Number.isFinite(args.dailyTarget) && args.dailyTarget >= 1 ? Math.trunc(args.dailyTarget) : current.dailyTarget,
+        savingGoal:
+          typeof args.savingGoal === "number" && Number.isFinite(args.savingGoal) && args.savingGoal > 0
+            ? Math.trunc(args.savingGoal)
+            : current.savingGoal,
+        dailyTarget:
+          typeof args.dailyTarget === "number" && Number.isFinite(args.dailyTarget) && args.dailyTarget >= 1
+            ? Math.trunc(args.dailyTarget)
+            : current.dailyTarget,
       });
       return result.ok ? { kind: "executed", label: "به‌روزرسانی تنظیمات" } : { kind: "error", error: result.error };
     }
     case "log_program_rules": {
-      const completed = Array.isArray(args.completed) ? args.completed.filter((item): item is string => typeof item === "string") : [];
+      const completed = Array.isArray(args.completed)
+        ? args.completed.filter((item): item is string => typeof item === "string")
+        : [];
       const today = todayKey();
       const existing = workspace.programDays.find((row) => row.day === today);
       const note = typeof args.note === "string" ? args.note : existing?.note || "";

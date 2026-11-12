@@ -1,4 +1,16 @@
-import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays, dailyReviews, planItems, socialLogs } from "@/db/schema";
+import type {
+  settings,
+  tasks,
+  applications,
+  projects,
+  checkins,
+  transactions,
+  notes,
+  programDays,
+  dailyReviews,
+  planItems,
+  socialLogs,
+} from "@/db/schema";
 import { tehranDayKey } from "@/lib/tehran-day";
 
 export type Task = typeof tasks.$inferSelect;
@@ -27,7 +39,18 @@ export type Workspace = {
   socialLogs: SocialLog[];
 };
 
-export type View = "assistant" | "overview" | "roadmap" | "career" | "projects" | "progress" | "health" | "finance" | "development" | "notes" | "guide";
+export type View =
+  | "assistant"
+  | "overview"
+  | "roadmap"
+  | "career"
+  | "projects"
+  | "progress"
+  | "health"
+  | "finance"
+  | "development"
+  | "notes"
+  | "guide";
 export type Mutation = { action: string; [key: string]: unknown };
 
 export function todayKey() {
@@ -35,7 +58,9 @@ export function todayKey() {
 }
 
 export function fa(value: number | string) {
-  return typeof value === "number" ? new Intl.NumberFormat("fa-IR").format(value) : value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
+  return typeof value === "number"
+    ? new Intl.NumberFormat("fa-IR").format(value)
+    : value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
 }
 
 export function addDaysKey(day: string, delta: number): string {
@@ -49,13 +74,24 @@ export function journeyDay(start: string) {
 }
 
 export function projectProgress(project: Project) {
-  return project.steps.length ? Math.round(project.steps.filter((step) => step.done).length / project.steps.length * 100) : 0;
+  return project.steps.length
+    ? Math.round((project.steps.filter((step) => step.done).length / project.steps.length) * 100)
+    : 0;
 }
 
 export const categoryLabels: Record<string, string> = {
-  career: "مسیر شغلی", project: "پروژه شخصی", health: "مراقبت از خود", learning: "یادگیری", personal: "شخصی",
+  career: "مسیر شغلی",
+  project: "پروژه شخصی",
+  health: "مراقبت از خود",
+  learning: "یادگیری",
+  personal: "شخصی",
 };
 
 export const statusLabels: Record<string, string> = {
-  planned: "برای اقدام", applied: "ارسال رزومه", interview: "مصاحبه", waiting: "منتظر پاسخ", offer: "پیشنهاد همکاری", rejected: "بسته‌شده",
+  planned: "برای اقدام",
+  applied: "ارسال رزومه",
+  interview: "مصاحبه",
+  waiting: "منتظر پاسخ",
+  offer: "پیشنهاد همکاری",
+  rejected: "بسته‌شده",
 };

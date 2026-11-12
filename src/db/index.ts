@@ -20,16 +20,8 @@ function normalizeDatabaseUrl(raw: string): {
   try {
     const url = new URL(raw);
     const sslmode = url.searchParams.get("sslmode");
-    const needsSsl =
-      (sslmode !== null && sslmode !== "disable") || supabaseHost;
-    for (const param of [
-      "sslmode",
-      "sslcert",
-      "sslkey",
-      "sslrootcert",
-      "uselibpqcompat",
-      "sslnegotiation",
-    ]) {
+    const needsSsl = (sslmode !== null && sslmode !== "disable") || supabaseHost;
+    for (const param of ["sslmode", "sslcert", "sslkey", "sslrootcert", "uselibpqcompat", "sslnegotiation"]) {
       url.searchParams.delete(param);
     }
     return { connectionString: url.toString(), needsSsl };

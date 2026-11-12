@@ -2,7 +2,15 @@ import { pgSchema, text, integer, boolean, timestamp, jsonb, index } from "drizz
 import type { PlanDeltas, PlanItemBase } from "@/lib/plan";
 
 export type ProjectStep = { title: string; done: boolean };
-export const emptyPlanDeltas: PlanDeltas = { planned: 0, done: 0, added: [], dropped: [], substituted: [], rescheduled: [], notes: [] };
+export const emptyPlanDeltas: PlanDeltas = {
+  planned: 0,
+  done: 0,
+  added: [],
+  dropped: [],
+  substituted: [],
+  rescheduled: [],
+  notes: [],
+};
 
 // This app stores its tables in a dedicated Postgres schema so it never
 // collides with other applications sharing the same database.
@@ -73,21 +81,25 @@ export const transactions = robehrah.table("journey_transactions", {
 
 // برنامه‌ی ساعتیِ هر روز؛ تولیدِ شبانه‌ی مربی + ویرایش‌های حین روزِ خودِ کاربر.
 // «base» = عکس فوریِ اصلیِ آیتم در لحظه‌ی اولین تغییر؛ مبنای تشخیصِ جایگزینی/جابه‌جایی در جمع‌بندی.
-export const planItems = robehrah.table("journey_plan_items", {
-  id: text("id").primaryKey(),
-  day: text("day").notNull(),
-  position: integer("position").notNull().default(0),
-  time: text("time").notNull().default("08:00"),
-  title: text("title").notNull(),
-  kind: text("kind").notNull().default("general"),
-  note: text("note").notNull().default(""),
-  done: boolean("done").notNull().default(false),
-  dropped: boolean("dropped").notNull().default(false),
-  origin: text("origin").notNull().default("user"), // "ai" | "user"
-  base: jsonb("base").$type<PlanItemBase | null>(),
-  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
-}, (table) => [index("journey_plan_items_day_position_idx").on(table.day, table.position)]);
+export const planItems = robehrah.table(
+  "journey_plan_items",
+  {
+    id: text("id").primaryKey(),
+    day: text("day").notNull(),
+    position: integer("position").notNull().default(0),
+    time: text("time").notNull().default("08:00"),
+    title: text("title").notNull(),
+    kind: text("kind").notNull().default("general"),
+    note: text("note").notNull().default(""),
+    done: boolean("done").notNull().default(false),
+    dropped: boolean("dropped").notNull().default(false),
+    origin: text("origin").notNull().default("user"), // "ai" | "user"
+    base: jsonb("base").$type<PlanItemBase | null>(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
+  },
+  (table) => [index("journey_plan_items_day_position_idx").on(table.day, table.position)],
+);
 
 export const notes = robehrah.table("journey_notes", {
   id: text("id").primaryKey(),

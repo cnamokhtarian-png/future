@@ -87,7 +87,9 @@ export function defaultPlanItems(): PlanItemInput[] {
   ];
 }
 
-export function renderPlanText(items: Array<{ time: string; title: string; position?: number; dropped?: boolean }>): string {
+export function renderPlanText(
+  items: Array<{ time: string; title: string; position?: number; dropped?: boolean }>,
+): string {
   return [...items]
     .filter((item) => !item.dropped)
     .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.time.localeCompare(b.time))
@@ -134,7 +136,8 @@ export function formatPlanForPrompt(items: PlanItemLike[]): string[] {
   lines.push(`برنامه‌ی امروز (${doneCount} از ${active.length} آیتم انجام‌شده):`);
   for (const item of active.slice(0, 20)) {
     const fl: string[] = [`- ${item.time} ${item.title}`];
-    if (item.done) fl.push("[انجام شد]"); else fl.push("[انجام نشد]");
+    if (item.done) fl.push("[انجام شد]");
+    else fl.push("[انجام نشد]");
     if (item.base && item.base.title !== item.title) fl.push(`[جایگزین «${item.base.title}»]`);
     if (item.note.trim()) fl.push(`[یادداشت: ${item.note.trim().slice(0, 100)}]`);
     lines.push(fl.join(" "));

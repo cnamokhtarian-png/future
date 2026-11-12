@@ -13,7 +13,10 @@ const RETRY_DELAYS_MS = [600, 1600];
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class GeminiError extends Error {
-  constructor(message: string, readonly status?: number) {
+  constructor(
+    message: string,
+    readonly status?: number,
+  ) {
     super(message);
     this.name = "GeminiError";
   }
@@ -96,7 +99,13 @@ function parseOutcome(data: Record<string, unknown>): InteractionOutcome {
   return { steps, functionCalls, text: extractText(data) };
 }
 
-export async function callGemini({ inputSteps, tools }: { inputSteps: InteractionStep[]; tools?: unknown[] }): Promise<InteractionOutcome> {
+export async function callGemini({
+  inputSteps,
+  tools,
+}: {
+  inputSteps: InteractionStep[];
+  tools?: unknown[];
+}): Promise<InteractionOutcome> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new GeminiError("کلید Gemini روی سرور تنظیم نشده است.", 500);
 
@@ -122,24 +131,36 @@ export async function callGemini({ inputSteps, tools }: { inputSteps: Interactio
     }
     if (response!.ok) {
       let data: Record<string, unknown>;
-      try { data = (await response!.json()) as Record<string, unknown>; }
-      catch { throw new GeminiError("پاسخ غیرمنتظره‌ای از جمینا دریافت شد.", 502); }
+      try {
+        data = (await response!.json()) as Record<string, unknown>;
+      } catch {
+        throw new GeminiError("پاسخ غیرمنتظره‌ای از جمینا دریافت شد.", 502);
+      }
       return parseOutcome(data);
     }
     let message = "";
-    try { message = ((await response!.json()) as { error?: { message?: string } })?.error?.message || ""; } catch { /* no body */ }
+    try {
+      message = ((await response!.json()) as { error?: { message?: string } })?.error?.message || "";
+    } catch {
+      /* no body */
+    }
     failures.push({ model, status: response!.status, message });
     // Every failure — including 5xx — may be model-specific (overload), so we
     // continue to the next candidate instead of giving up early.
   }
 
   const last = failures[failures.length - 1];
-  const summary = failures.map((failure) => `${failure.model} → ${failure.status}${failure.message ? ` (${failure.message})` : ""}`).join(" | ");
+  const summary = failures
+    .map((failure) => `${failure.model} → ${failure.status}${failure.message ? ` (${failure.message})` : ""}`)
+    .join(" | ");
   if (last?.status === 429) {
     throw new GeminiError("ظرفیت استفاده از جمینا موقتاً تمام شده است؛ چند لحظه بعد دوباره تلاش کن.", 429);
   }
   if (last?.status === 400 || last?.status === 401 || last?.status === 403 || last?.status === 404) {
-    throw new GeminiError(`کلید Gemini پذیرفته نشد یا به این مدل‌ها دسترسی ندارد. جزئیات گوگل: ${summary}`, last.status);
+    throw new GeminiError(
+      `کلید Gemini پذیرفته نشد یا به این مدل‌ها دسترسی ندارد. جزئیات گوگل: ${summary}`,
+      last.status,
+    );
   }
   throw new GeminiError(`خطای جمینا: ${summary || "پاسخ نامعتبر"}`, last?.status);
 }

@@ -19,8 +19,11 @@ const bodySchema = z.object({
 export async function POST(request: Request) {
   try {
     let rawBody: unknown;
-    try { rawBody = await request.json(); }
-    catch { return NextResponse.json({ error: "بدنه درخواست باید JSON معتبر باشد." }, { status: 400 }); }
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "بدنه درخواست باید JSON معتبر باشد." }, { status: 400 });
+    }
     const parsed = bodySchema.safeParse(rawBody);
     if (!parsed.success) return NextResponse.json({ error: "پیام‌ها معتبر نیستند." }, { status: 400 });
     const history = parsed.data.messages.slice(-24);
@@ -69,7 +72,12 @@ export async function POST(request: Request) {
           responsePayload = { ok: true, message: executed.label };
         } else if (executed.kind === "confirm") {
           if (!pendingConfirmation) pendingConfirmation = { label: executed.label, action: executed.action };
-          responsePayload = { ok: false, pending: true, message: "حذف بدون تأیید کاربر انجام نمی‌شود؛ ابزار روی سایت منتظر تأیید اوست. فقط بگو آماده‌ی حذف است و دقیقاً بپرس که تأیید می‌کند یا نه." };
+          responsePayload = {
+            ok: false,
+            pending: true,
+            message:
+              "حذف بدون تأیید کاربر انجام نمی‌شود؛ ابزار روی سایت منتظر تأیید اوست. فقط بگو آماده‌ی حذف است و دقیقاً بپرس که تأیید می‌کند یا نه.",
+          };
         } else if (executed.kind === "navigate") {
           navigate = executed.view;
           responsePayload = { ok: true, message: `بخش ${executed.view} برای کاربر باز شد.` };
@@ -80,7 +88,10 @@ export async function POST(request: Request) {
       }
     }
 
-    if (!reply) reply = performed.length ? "انجام شد. چیز دیگه‌ای هست که برات انجام بدم؟" : "به نظر می‌رسد الان پاسخی ندارم؛ دوباره بپرس یا کمی دقیق‌تر بگو چه می‌خواهی.";
+    if (!reply)
+      reply = performed.length
+        ? "انجام شد. چیز دیگه‌ای هست که برات انجام بدم؟"
+        : "به نظر می‌رسد الان پاسخی ندارم؛ دوباره بپرس یا کمی دقیق‌تر بگو چه می‌خواهی.";
 
     return NextResponse.json({
       reply,
@@ -91,7 +102,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     if (error instanceof GeminiError) {
-      return NextResponse.json({ error: error.message }, { status: error.status && error.status >= 400 && error.status < 600 ? error.status : 500 });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status && error.status >= 400 && error.status < 600 ? error.status : 500 },
+      );
     }
     console.error("Assistant failed", error);
     return NextResponse.json({ error: "دستیار موقتاً در دسترس نیست؛ دوباره تلاش کن." }, { status: 500 });

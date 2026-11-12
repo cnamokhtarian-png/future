@@ -27,7 +27,11 @@ export async function GET(request: Request) {
   const lookback = Number(url.searchParams.get("lookback") || (mode === "backfill" ? "45" : "14"));
 
   try {
-    const closed = await closeMissingDays({ mode, lookbackDays: lookback, aiBudget: Number.isFinite(aiBudget) ? aiBudget : 3 });
+    const closed = await closeMissingDays({
+      mode,
+      lookbackDays: lookback,
+      aiBudget: Number.isFinite(aiBudget) ? aiBudget : 3,
+    });
     return Response.json({ ok: true, mode, closed, count: closed.length });
   } catch (error) {
     console.error("Daily close failed", error);

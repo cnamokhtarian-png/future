@@ -3,13 +3,7 @@ import { db } from "@/db";
 import { checkins, transactions, programDays, settings, dailyReviews, planItems } from "@/db/schema";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { todayKey, addDaysKey } from "@/lib/types";
-import {
-  programRules,
-  programRuleIds,
-  effectiveCompleted,
-  parseTimestamp,
-  type ProgramContext,
-} from "@/lib/program";
+import { programRules, programRuleIds, effectiveCompleted, parseTimestamp, type ProgramContext } from "@/lib/program";
 import { callGemini, userInputStep } from "@/lib/gemini";
 import { tehranDayKey } from "@/lib/tehran-day";
 import {
@@ -33,7 +27,12 @@ export function dayKeyOf(date: Date): string {
 
 function faDayLabel(day: string): string {
   const date = new Date(`${day}T12:00:00+03:30`);
-  return new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", weekday: "long", month: "long", day: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("fa-IR", {
+    timeZone: "Asia/Tehran",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(date);
 }
 
 export async function isDayClosed(day: string): Promise<boolean> {
@@ -52,7 +51,11 @@ async function loadDayData(day: string) {
   });
   const spent = dayTransactions.filter((item) => item.type === "expense").reduce((sum, item) => sum + item.amount, 0);
   const earned = dayTransactions.filter((item) => item.type === "income").reduce((sum, item) => sum + item.amount, 0);
-  const dayPlanItems = await db.select().from(planItems).where(eq(planItems.day, day)).orderBy(asc(planItems.position), asc(planItems.createdAt));
+  const dayPlanItems = await db
+    .select()
+    .from(planItems)
+    .where(eq(planItems.day, day))
+    .orderBy(asc(planItems.position), asc(planItems.createdAt));
   return { profile, programDay, checkin, dayTransactions, spent, earned, dayPlanItems };
 }
 
@@ -90,54 +93,74 @@ function parseJsonObject(raw: string): Record<string, unknown> | null {
 
 const KIND_INSTRUCTIONS = planKinds.map((kind) => `${kind.id}=${kind.label}`).join("، ");
 
-function deterministicSummary(day: string, input: {
-  done: string[];
-  missed: string[];
-  total: number;
-  percent: number;
-  gratitude: string;
-  mood?: number | null;
-  sleep?: number | null;
-  cigarettes?: number | null;
-  transactionCount: number;
-  deltas?: PlanDeltas;
-}): string {
+function deterministicSummary(
+  day: string,
+  input: {
+    done: string[];
+    missed: string[];
+    total: number;
+    percent: number;
+    gratitude: string;
+    mood?: number | null;
+    sleep?: number | null;
+    cigarettes?: number | null;
+    transactionCount: number;
+    deltas?: PlanDeltas;
+  },
+): string {
   const percentText = new Intl.NumberFormat("fa-IR").format(input.percent);
   const doneTitles = programRules.filter((rule) => input.done.includes(rule.id)).map((rule) => rule.title);
   const missedTitles = programRules.filter((rule) => input.missed.includes(rule.id)).map((rule) => rule.title);
-  const parts = [`امروز ${new Intl.NumberFormat("fa-IR").format(input.done.length)} از ${new Intl.NumberFormat("fa-IR").format(input.total)} قانون را کامل کردی (${percentText}٪).`];
+  const parts = [
+    `امروز ${new Intl.NumberFormat("fa-IR").format(input.done.length)} از ${new Intl.NumberFormat("fa-IR").format(input.total)} قانون را کامل کردی (${percentText}٪).`,
+  ];
   if (doneTitles.length) parts.push(`انجام شد: ${doneTitles.join("، ")}.`);
   if (missedTitles.length) parts.push(`جا ماند: ${missedTitles.join("، ")}.`);
   if (input.mood != null) parts.push(`حالت روحی‌ات ${new Intl.NumberFormat("fa-IR").format(input.mood)} از ۵ بود.`);
   if (input.sleep != null) parts.push(`${new Intl.NumberFormat("fa-IR").format(input.sleep)} ساعت خوابیدی.`);
-  if (input.cigarettes != null && input.cigarettes > 0) parts.push(`${new Intl.NumberFormat("fa-IR").format(input.cigarettes)} نخ سیگار ثبت شد.`);
-  if (input.transactionCount > 0) parts.push(`${new Intl.NumberFormat("fa-IR").format(input.transactionCount)} تراکنش مالی امروز ثبت شد.`);
+  if (input.cigarettes != null && input.cigarettes > 0)
+    parts.push(`${new Intl.NumberFormat("fa-IR").format(input.cigarettes)} نخ سیگار ثبت شد.`);
+  if (input.transactionCount > 0)
+    parts.push(`${new Intl.NumberFormat("fa-IR").format(input.transactionCount)} تراکنش مالی امروز ثبت شد.`);
   if (input.gratitude.trim()) parts.push(`جمله‌ی پایانی‌ات: «${input.gratitude.trim()}»`);
   if (input.deltas && input.deltas.planned > 0) {
-    parts.push(`از برنامه‌ی ${new Intl.NumberFormat("fa-IR").format(input.deltas.planned)} آیتمی، ${new Intl.NumberFormat("fa-IR").format(input.deltas.done)} آیتم انجام شد${input.deltas.substituted.length ? ` و ${new Intl.NumberFormat("fa-IR").format(input.deltas.substituted.length)} آیتم آگاهانه جایگزین شد` : ""}${input.deltas.dropped.length ? ` و ${new Intl.NumberFormat("fa-IR").format(input.deltas.dropped.length)} آیتم از برنامه کنار گذاشته شد` : ""}.`);
+    parts.push(
+      `از برنامه‌ی ${new Intl.NumberFormat("fa-IR").format(input.deltas.planned)} آیتمی، ${new Intl.NumberFormat("fa-IR").format(input.deltas.done)} آیتم انجام شد${input.deltas.substituted.length ? ` و ${new Intl.NumberFormat("fa-IR").format(input.deltas.substituted.length)} آیتم آگاهانه جایگزین شد` : ""}${input.deltas.dropped.length ? ` و ${new Intl.NumberFormat("fa-IR").format(input.deltas.dropped.length)} آیتم از برنامه کنار گذاشته شد` : ""}.`,
+    );
   }
   return parts.join(" ");
 }
 
 type AiCloseResult = { summary: string; focus: string; items: PlanItemInput[] | null };
 
-function buildAiPrompt(day: string, input: {
-  userName: string;
-  percent: number;
-  done: string[];
-  missed: string[];
-  gratitude: string;
-  mood?: number | null;
-  sleep?: number | null;
-  cigarettes?: number | null;
-  transactionCount: number;
-  spent: number;
-  earned: number;
-  planLines: string[];
-  deltas: PlanDeltas;
-}): string {
-  const doneTitles = programRules.filter((rule) => input.done.includes(rule.id)).map((rule) => `- ${rule.title}`).join("\n") || "- هیچ‌کدام";
-  const missedTitles = programRules.filter((rule) => input.missed.includes(rule.id)).map((rule) => `- ${rule.title}`).join("\n") || "- هیچ‌کدام (روز کامل!)";
+function buildAiPrompt(
+  day: string,
+  input: {
+    userName: string;
+    percent: number;
+    done: string[];
+    missed: string[];
+    gratitude: string;
+    mood?: number | null;
+    sleep?: number | null;
+    cigarettes?: number | null;
+    transactionCount: number;
+    spent: number;
+    earned: number;
+    planLines: string[];
+    deltas: PlanDeltas;
+  },
+): string {
+  const doneTitles =
+    programRules
+      .filter((rule) => input.done.includes(rule.id))
+      .map((rule) => `- ${rule.title}`)
+      .join("\n") || "- هیچ‌کدام";
+  const missedTitles =
+    programRules
+      .filter((rule) => input.missed.includes(rule.id))
+      .map((rule) => `- ${rule.title}`)
+      .join("\n") || "- هیچ‌کدام (روز کامل!)";
   const money = (value: number) => `${new Intl.NumberFormat("fa-IR").format(value)} تومان`;
   const planSection = input.planLines.length
     ? [
@@ -145,12 +168,22 @@ function buildAiPrompt(day: string, input: {
         `برنامه‌ی امروز — بر اساسِ آخرین وضعیت واقعیِ ثبت‌شده توسط خودش (نه نسخه‌ی اولیه‌ی تو):`,
         ...input.planLines,
         `تغییرات ثبت‌شده توسط خودش در طول روز:`,
-        input.deltas.substituted.length ? input.deltas.substituted.map((d) => `- جایگزینی: «${d.from}» به «${d.to}»`).join("\n") : ``,
-        input.deltas.rescheduled.length ? input.deltas.rescheduled.map((r) => `- ساعت تغییر کرد: «${r.title}» از ${r.from} به ${r.to}`).join("\n") : ``,
+        input.deltas.substituted.length
+          ? input.deltas.substituted.map((d) => `- جایگزینی: «${d.from}» به «${d.to}»`).join("\n")
+          : ``,
+        input.deltas.rescheduled.length
+          ? input.deltas.rescheduled.map((r) => `- ساعت تغییر کرد: «${r.title}» از ${r.from} به ${r.to}`).join("\n")
+          : ``,
         input.deltas.dropped.length ? `- از برنامه کنار گذاشت: ${input.deltas.dropped.join("، ")}` : ``,
         input.deltas.added.length ? `- به خواست خودش اضافه کرد: ${input.deltas.added.join("، ")}` : ``,
         input.deltas.notes.length ? `- یادداشت‌هایش روی برنامه: ${input.deltas.notes.join(" | ")}` : ``,
-        (input.deltas.substituted.length === 0 && input.deltas.rescheduled.length === 0 && input.deltas.dropped.length === 0 && input.deltas.added.length === 0 && input.deltas.rescheduled.length === 0) ? `- بدون تغییر` : ``,
+        input.deltas.substituted.length === 0 &&
+        input.deltas.rescheduled.length === 0 &&
+        input.deltas.dropped.length === 0 &&
+        input.deltas.added.length === 0 &&
+        input.deltas.rescheduled.length === 0
+          ? `- بدون تغییر`
+          : ``,
       ].filter((line) => line !== "")
     : [];
   return [
@@ -184,19 +217,28 @@ function buildAiPrompt(day: string, input: {
     `- شخصی‌سازی‌شده بر اساس ضعف‌های امروز (جا‌مانده‌ها را با رنگ مشخص‌تر در متن بیاور) و متناسب با خودش، نه یک الگوی کپی.`,
     `- "time" حتماً به شکل ۲۴ساعته و HH:MM باشد؛ "kind" یکی از این‌ها: ${KIND_INSTRUCTIONS}.`,
     `- "title" کوتاه، فارسی و قابل اجرا باشد (حداکثر یک خط).`,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 // برنامه‌ی فقط-آیتمی؛ برای وقتی که خودِ کاربر «برنامه‌ی امروزم را بچین» را می‌زند.
-function buildItemsPrompt(day: string, input: {
-  userName: string;
-  percent: number;
-  done: string[];
-  missed: string[];
-  gratitude: string;
-  mood?: number | null;
-}): string {
-  const missedTitles = programRules.filter((rule) => input.missed.includes(rule.id)).map((rule) => rule.title).join("، ") || "هیچ‌کدام";
+function buildItemsPrompt(
+  day: string,
+  input: {
+    userName: string;
+    percent: number;
+    done: string[];
+    missed: string[];
+    gratitude: string;
+    mood?: number | null;
+  },
+): string {
+  const missedTitles =
+    programRules
+      .filter((rule) => input.missed.includes(rule.id))
+      .map((rule) => rule.title)
+      .join("، ") || "هیچ‌کدام";
   return [
     `تو «مربی روبه‌راه» هستی. برای ${input.userName} برنامه‌ی کاملِ امروز (${faDayLabel(day)}) را بنویس.`,
     `وضعیت الان: ${new Intl.NumberFormat("fa-IR").format(input.percent)}٪ از قوانین انجام شده؛ جا‌مانده‌ها تا الان: ${missedTitles}.`,
@@ -206,7 +248,9 @@ function buildItemsPrompt(day: string, input: {
     `پاسخ را فقط و فقط به‌صورت JSON معتبر بده:`,
     `{ "items": [{ "time": "06:30", "title": "...", "kind": "silence" }] }`,
     `۱۲ تا ۱۸ ردیف از قبل ۷ صبح تا قبل ۱۲ شب، ساعتی، فارسی، شامل ورزش ۴۵ دقیقه‌ای، کار عمیق ۹۰ دقیقه‌ای، ۲٫۵ لیتر آب، کتاب، سکوت، گربه‌ها، شکرگزاری شبانه و خواب قبل ۱۲. "kind" حتماً از این‌ها باشد: ${KIND_INSTRUCTIONS}.`,
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function parseAiClose(raw: string): AiCloseResult | null {
@@ -223,22 +267,30 @@ function parseAiClose(raw: string): AiCloseResult | null {
 }
 
 async function insertPlanItemsForDay(day: string, items: PlanItemInput[], origin: "ai" | "user"): Promise<number> {
-  const [existing] = await db.select({ count: sql<number>`count(*)::int` }).from(planItems).where(eq(planItems.day, day));
+  const [existing] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(planItems)
+    .where(eq(planItems.day, day));
   if ((existing?.count ?? 0) > 0) return 0;
   const sorted = [...items].sort((a, b) => a.time.localeCompare(b.time));
-  await db.insert(planItems).values(sorted.map((item, position) => ({
-    id: crypto.randomUUID(),
-    day,
-    position,
-    time: item.time,
-    title: item.title,
-    kind: item.kind,
-    origin,
-  })));
+  await db.insert(planItems).values(
+    sorted.map((item, position) => ({
+      id: crypto.randomUUID(),
+      day,
+      position,
+      time: item.time,
+      title: item.title,
+      kind: item.kind,
+      origin,
+    })),
+  );
   return sorted.length;
 }
 
-export async function closeDay(day: string, options: { trigger?: "cron" | "manual"; useAi?: boolean } = {}): Promise<{ row: DailyReviewRow | null; created: boolean }> {
+export async function closeDay(
+  day: string,
+  options: { trigger?: "cron" | "manual"; useAi?: boolean } = {},
+): Promise<{ row: DailyReviewRow | null; created: boolean }> {
   const existing = await db.select().from(dailyReviews).where(eq(dailyReviews.day, day));
   if (existing[0]) return { row: existing[0], created: false };
 
@@ -252,7 +304,18 @@ export async function closeDay(day: string, options: { trigger?: "cron" | "manua
   const percent = Math.round((done.length / total) * 100);
   const gratitude = programDay?.note || "";
   const deltas = computeDeltas(dayPlanItems);
-  const fallbackSummary = deterministicSummary(day, { done, missed, total, percent, gratitude, mood: checkin?.mood ?? null, sleep: checkin?.sleepHours ?? null, cigarettes: checkin?.cigarettes ?? null, transactionCount: dayTransactions.length, deltas });
+  const fallbackSummary = deterministicSummary(day, {
+    done,
+    missed,
+    total,
+    percent,
+    gratitude,
+    mood: checkin?.mood ?? null,
+    sleep: checkin?.sleepHours ?? null,
+    cigarettes: checkin?.cigarettes ?? null,
+    transactionCount: dayTransactions.length,
+    deltas,
+  });
 
   let summary = fallbackSummary;
   let focus = missed.length
@@ -264,21 +327,25 @@ export async function closeDay(day: string, options: { trigger?: "cron" | "manua
   if (options.useAi !== false && process.env.GEMINI_API_KEY) {
     try {
       const outcome = await callGemini({
-        inputSteps: [userInputStep(buildAiPrompt(day, {
-          userName: profile?.name || "رفیق",
-          percent,
-          done,
-          missed,
-          gratitude,
-          mood: checkin?.mood ?? null,
-          sleep: checkin?.sleepHours ?? null,
-          cigarettes: checkin?.cigarettes ?? null,
-          transactionCount: dayTransactions.length,
-          spent,
-          earned,
-          planLines: formatPlanForPrompt(dayPlanItems),
-          deltas,
-        }))],
+        inputSteps: [
+          userInputStep(
+            buildAiPrompt(day, {
+              userName: profile?.name || "رفیق",
+              percent,
+              done,
+              missed,
+              gratitude,
+              mood: checkin?.mood ?? null,
+              sleep: checkin?.sleepHours ?? null,
+              cigarettes: checkin?.cigarettes ?? null,
+              transactionCount: dayTransactions.length,
+              spent,
+              earned,
+              planLines: formatPlanForPrompt(dayPlanItems),
+              deltas,
+            }),
+          ),
+        ],
       });
       const parsed = parseAiClose(outcome.text);
       if (parsed) {
@@ -300,31 +367,45 @@ export async function closeDay(day: string, options: { trigger?: "cron" | "manua
   let nextPlan = "";
   try {
     await insertPlanItemsForDay(tomorrow, tomorrowItems, "ai");
-    const rows = await db.select().from(planItems).where(eq(planItems.day, tomorrow)).orderBy(asc(planItems.position), asc(planItems.createdAt));
-    nextPlan = renderPlanText(rows.length ? rows : [...tomorrowItems].sort((a, b) => a.time.localeCompare(b.time)).map((item, position) => ({ ...item, position })));
+    const rows = await db
+      .select()
+      .from(planItems)
+      .where(eq(planItems.day, tomorrow))
+      .orderBy(asc(planItems.position), asc(planItems.createdAt));
+    nextPlan = renderPlanText(
+      rows.length
+        ? rows
+        : [...tomorrowItems]
+            .sort((a, b) => a.time.localeCompare(b.time))
+            .map((item, position) => ({ ...item, position })),
+    );
   } catch (error) {
     console.error(`Writing tomorrow's plan for ${day} failed`, error);
     nextPlan = renderPlanText(tomorrowItems.map((item, position) => ({ ...item, position })));
   }
 
-  const inserted = await db.insert(dailyReviews).values({
-    day,
-    percent,
-    done: done.length,
-    total,
-    completed: done,
-    missed,
-    gratitude,
-    checkinMood: checkin?.mood ?? null,
-    checkinSleep: checkin?.sleepHours ?? null,
-    checkinCigarettes: checkin?.cigarettes ?? null,
-    summary,
-    focus,
-    nextPlan,
-    trigger: options.trigger || "cron",
-    aiGenerated,
-    deltas,
-  }).onConflictDoNothing().returning();
+  const inserted = await db
+    .insert(dailyReviews)
+    .values({
+      day,
+      percent,
+      done: done.length,
+      total,
+      completed: done,
+      missed,
+      gratitude,
+      checkinMood: checkin?.mood ?? null,
+      checkinSleep: checkin?.sleepHours ?? null,
+      checkinCigarettes: checkin?.cigarettes ?? null,
+      summary,
+      focus,
+      nextPlan,
+      trigger: options.trigger || "cron",
+      aiGenerated,
+      deltas,
+    })
+    .onConflictDoNothing()
+    .returning();
 
   return { row: inserted[0] || null, created: true };
 }
@@ -348,14 +429,18 @@ export async function generatePlanForToday(): Promise<{ created: boolean; count:
   if (process.env.GEMINI_API_KEY) {
     try {
       const outcome = await callGemini({
-        inputSteps: [userInputStep(buildItemsPrompt(day, {
-          userName: profile?.name || "رفیق",
-          percent,
-          done: doneTitles,
-          missed,
-          gratitude: programDay?.note || "",
-          mood: checkin?.mood ?? null,
-        }))],
+        inputSteps: [
+          userInputStep(
+            buildItemsPrompt(day, {
+              userName: profile?.name || "رفیق",
+              percent,
+              done: doneTitles,
+              missed,
+              gratitude: programDay?.note || "",
+              mood: checkin?.mood ?? null,
+            }),
+          ),
+        ],
       });
       items = sanitizePlanItems(parseJsonObject(outcome.text)?.items);
     } catch (error) {
@@ -374,14 +459,19 @@ export async function generatePlanForToday(): Promise<{ created: boolean; count:
  * (program ticks, check-in or a transaction) are closed. AI calls are budgeted
  * to the newest `aiBudget` days; older days get the deterministic summary.
  */
-export async function closeMissingDays(options: { mode?: "cron" | "backfill"; lookbackDays?: number; aiBudget?: number } = {}): Promise<string[]> {
+export async function closeMissingDays(
+  options: { mode?: "cron" | "backfill"; lookbackDays?: number; aiBudget?: number } = {},
+): Promise<string[]> {
   const mode = options.mode || "cron";
   const lookback = Math.max(1, Math.min(options.lookbackDays ?? 14, 60));
   let aiBudget = Math.max(0, options.aiBudget ?? 3);
   const today = todayKey();
   // The challenge did not exist before it started: never close days before
   // settings.startedOn (pre-program 0% rows would be fiction, not data).
-  const [profile] = await db.select({ startedOn: settings.startedOn }).from(settings).where(eq(settings.id, "personal"));
+  const [profile] = await db
+    .select({ startedOn: settings.startedOn })
+    .from(settings)
+    .where(eq(settings.id, "personal"));
   const startedOn = profile?.startedOn || today;
   const closed: string[] = [];
 
@@ -410,4 +500,3 @@ export async function closeMissingDays(options: { mode?: "cron" | "backfill"; lo
   }
   return closed.reverse();
 }
-

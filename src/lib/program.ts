@@ -18,20 +18,79 @@ export type ProgramRule = {
 };
 
 export const programRules: ProgramRule[] = [
-  { id: "wake", title: "بیداری تا قبل از ۷:۰۰ صبح، بدون «فقط پنج دقیقه دیگه»", detail: "ساعت بیداری را دیشب تنظیم کن؛ اسنپ‌بک و چرتِ «یه بار دیگه» ممنوع است." },
-  { id: "workout", title: "۴۵ دقیقه فعالیت بدنی، ترجیحاً در هوای آزاد", detail: "پیاده‌روی تند، نرمش، دوچرخه یا هر حرکتی که بدنت را با خودت حرف بزند. اگر بیمار هستی، نه؛ وگرنه بهانه‌ای وجود ندارد." },
-  { id: "water", title: "۲٫۵ لیتر آب در طول روز", detail: "بطری را پر کن و در دیدت بگذار؛ تشنه‌گی را با خستگی اشتباه نگیر." },
-  { id: "read", title: "۱۰ صفحه کتاب مفید و غیرکاری", detail: "کتاب واقعی، نه صفحه‌نمایش. توسعه فردی، روان‌شناسی، معنویت یا هر موضوعی که ذهنت را رشد دهد." },
-  { id: "silent", title: "۱۰ دقیقه سکوت، ذهن‌آگاهی یا ذکر", detail: "بدون تلفن. تنفس عمیق، مدیتیشن، ذکر یا دعا؛ روزت را با سکوت تحویل بگیر." },
-  { id: "clean", title: "بدون سیگار، الکل، حشیش و هیچ ماده‌ای — کامل", detail: "یک لغزش یعنی زنجیره می‌شکند. این قانون هیچ تبصره‌ای ندارد.", auto: "clean" },
-  { id: "walk", title: "۱۵ دقیقه پیاده‌روی بدون تلفن همراه", detail: "فقط راه برو و نگاه کن. همین معجزه‌ی کوچک، ذهنت را ریست می‌کند.", auto: "walked" },
-  { id: "deepwork", title: "یک بلوک کار عمیق (حداقل ۹۰ دقیقه) بدون شبکه اجتماعی", detail: "یک کار مشخص، تلفن دور از دسترس، تایمر روشن. کیفیت یک بلوک واقعی از یک روز شتاب‌زده باارزش‌تر است." },
-  { id: "finance", title: "ثبت کامل دخل و خرج امروز؛ حتی ۱۰ هزار تومان", detail: "هیچ تراکنشی نباید از قلم بیفتد. شفافیت، اولین قدم هر بودجه‌ی موفق است.", auto: "finance" },
-  { id: "gratitude", title: "شکرگزاری شبانه + یک جمله درباره‌ی امروز", detail: "سه چیز که بابت‌شان خدا یا زندگی را شکر می‌کنی و یک جمله درباره‌ی روزی که گذراندی؛ ترجیحاً در یادداشت‌های همین برنامه." },
-  { id: "nutrition", title: "بدون فست‌فود و شیرینی اضافه؛ تغذیه واقعی", detail: "چیزی که از یک ماده‌ی اولیه می‌شناسی (برنج، حبوبات، سبزی، مرغ، نان…) بخور؛ جعبه‌ها و بسته‌های فرآوری‌شده را کنار بگذار." },
-  { id: "sleep", title: "خواب قبل از ۱۲:۰۰ شب", detail: "تلفن را ساعت ۱۱:۳۰ کنار بگذار. انضباط صبح از شب قبل شروع می‌شود." },
+  {
+    id: "wake",
+    title: "بیداری تا قبل از ۷:۰۰ صبح، بدون «فقط پنج دقیقه دیگه»",
+    detail: "ساعت بیداری را دیشب تنظیم کن؛ اسنپ‌بک و چرتِ «یه بار دیگه» ممنوع است.",
+  },
+  {
+    id: "workout",
+    title: "۴۵ دقیقه فعالیت بدنی، ترجیحاً در هوای آزاد",
+    detail:
+      "پیاده‌روی تند، نرمش، دوچرخه یا هر حرکتی که بدنت را با خودت حرف بزند. اگر بیمار هستی، نه؛ وگرنه بهانه‌ای وجود ندارد.",
+  },
+  {
+    id: "water",
+    title: "۲٫۵ لیتر آب در طول روز",
+    detail: "بطری را پر کن و در دیدت بگذار؛ تشنه‌گی را با خستگی اشتباه نگیر.",
+  },
+  {
+    id: "read",
+    title: "۱۰ صفحه کتاب مفید و غیرکاری",
+    detail: "کتاب واقعی، نه صفحه‌نمایش. توسعه فردی، روان‌شناسی، معنویت یا هر موضوعی که ذهنت را رشد دهد.",
+  },
+  {
+    id: "silent",
+    title: "۱۰ دقیقه سکوت، ذهن‌آگاهی یا ذکر",
+    detail: "بدون تلفن. تنفس عمیق، مدیتیشن، ذکر یا دعا؛ روزت را با سکوت تحویل بگیر.",
+  },
+  {
+    id: "clean",
+    title: "بدون سیگار، الکل، حشیش و هیچ ماده‌ای — کامل",
+    detail: "یک لغزش یعنی زنجیره می‌شکند. این قانون هیچ تبصره‌ای ندارد.",
+    auto: "clean",
+  },
+  {
+    id: "walk",
+    title: "۱۵ دقیقه پیاده‌روی بدون تلفن همراه",
+    detail: "فقط راه برو و نگاه کن. همین معجزه‌ی کوچک، ذهنت را ریست می‌کند.",
+    auto: "walked",
+  },
+  {
+    id: "deepwork",
+    title: "یک بلوک کار عمیق (حداقل ۹۰ دقیقه) بدون شبکه اجتماعی",
+    detail: "یک کار مشخص، تلفن دور از دسترس، تایمر روشن. کیفیت یک بلوک واقعی از یک روز شتاب‌زده باارزش‌تر است.",
+  },
+  {
+    id: "finance",
+    title: "ثبت کامل دخل و خرج امروز؛ حتی ۱۰ هزار تومان",
+    detail: "هیچ تراکنشی نباید از قلم بیفتد. شفافیت، اولین قدم هر بودجه‌ی موفق است.",
+    auto: "finance",
+  },
+  {
+    id: "gratitude",
+    title: "شکرگزاری شبانه + یک جمله درباره‌ی امروز",
+    detail:
+      "سه چیز که بابت‌شان خدا یا زندگی را شکر می‌کنی و یک جمله درباره‌ی روزی که گذراندی؛ ترجیحاً در یادداشت‌های همین برنامه.",
+  },
+  {
+    id: "nutrition",
+    title: "بدون فست‌فود و شیرینی اضافه؛ تغذیه واقعی",
+    detail:
+      "چیزی که از یک ماده‌ی اولیه می‌شناسی (برنج، حبوبات، سبزی، مرغ، نان…) بخور؛ جعبه‌ها و بسته‌های فرآوری‌شده را کنار بگذار.",
+  },
+  {
+    id: "sleep",
+    title: "خواب قبل از ۱۲:۰۰ شب",
+    detail: "تلفن را ساعت ۱۱:۳۰ کنار بگذار. انضباط صبح از شب قبل شروع می‌شود.",
+  },
   // قانونِ پیوند اجتماعی — به‌خواست خودِ کاربر به برنامه اضافه شد (۲۰۲۶-۱۱)؛ کارِ ویژه‌اش در تب «پیوند اجتماعی» است.
-  { id: "social", title: "یک تعامل اجتماعی واقعی امروز", detail: "حداقل یک مکالمه‌ی واقعی با یک آدم — حتی فروشنده یا همسایه. کاملش کن: شروع، یک سؤال، گوش دادن، خداحافظی. گوشی در جیب. از راحت‌ترین جای زندگیت شروع کن؛ قرار نیست قهرمانانه باشد." },
+  {
+    id: "social",
+    title: "یک تعامل اجتماعی واقعی امروز",
+    detail:
+      "حداقل یک مکالمه‌ی واقعی با یک آدم — حتی فروشنده یا همسایه. کاملش کن: شروع، یک سؤال، گوش دادن، خداحافظی. گوشی در جیب. از راحت‌ترین جای زندگیت شروع کن؛ قرار نیست قهرمانانه باشد.",
+  },
 ];
 
 export const programRuleIds = programRules.map((rule) => rule.id);
@@ -59,7 +118,14 @@ export function programContext(workspace: Workspace): ProgramContext {
     todayTransactions: workspace.transactions.filter((item) => {
       const parsed = parseTimestamp(item.createdAt);
       if (!parsed) return false;
-      return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(parsed) === today;
+      return (
+        new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Tehran",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(parsed) === today
+      );
     }),
   };
 }
@@ -102,7 +168,17 @@ export function programDayComplete(manual: string[], context: ProgramContext): b
 
 export function programStreak(workspace: Workspace) {
   const contextByDay = new Map<string, ProgramContext>();
-  const transactionsWithDay = workspace.transactions.map((item) => ({ item, day: parseTimestamp(item.createdAt) ? new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(parseTimestamp(item.createdAt)!) : "" }));
+  const transactionsWithDay = workspace.transactions.map((item) => ({
+    item,
+    day: parseTimestamp(item.createdAt)
+      ? new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Tehran",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(parseTimestamp(item.createdAt)!)
+      : "",
+  }));
   for (const entry of workspace.checkins) contextByDay.set(entry.day, { checkin: entry, todayTransactions: [] });
   for (const { item, day } of transactionsWithDay) {
     if (!day) continue;
@@ -114,7 +190,8 @@ export function programStreak(workspace: Workspace) {
   const today = todayKey();
   const allDays = new Set<string>([...recorded.keys(), ...contextByDay.keys()]);
   allDays.add(today);
-  const completeOf = (day: string) => programDayComplete(recorded.get(day)?.completed || [], contextByDay.get(day) || { todayTransactions: [] });
+  const completeOf = (day: string) =>
+    programDayComplete(recorded.get(day)?.completed || [], contextByDay.get(day) || { todayTransactions: [] });
   const days = [...allDays].sort().reverse();
   let streak = 0;
   for (const day of days) {
@@ -124,14 +201,19 @@ export function programStreak(workspace: Workspace) {
     else break;
   }
   const chronological = [...new Set([...recorded.keys()])].sort();
-  let best = 0, run = 0;
+  let best = 0,
+    run = 0;
   for (const day of chronological) {
     if (day > today) continue;
-    if (completeOf(day)) run += 1; else run = 0;
+    if (completeOf(day)) run += 1;
+    else run = 0;
     best = Math.max(best, run);
   }
   const firstDay = chronological[0] || today;
-  const dayNumber = Math.min(PROGRAM_LENGTH, Math.max(1, Math.floor((Date.parse(today) - Date.parse(firstDay)) / 86400000) + 1));
+  const dayNumber = Math.min(
+    PROGRAM_LENGTH,
+    Math.max(1, Math.floor((Date.parse(today) - Date.parse(firstDay)) / 86400000) + 1),
+  );
   const completedDays = chronological.filter((day) => day <= today && completeOf(day)).length;
   return { streak, best: Math.max(best, streak), dayNumber, completedDays, firstDay, isTracking: recorded.size > 0 };
 }
@@ -158,7 +240,7 @@ export function recentProgramSnapshots(workspace: Workspace, count = 14) {
     const day = dayKeyOf(date);
     const manual = recorded.get(day)?.completed || [];
     const done = effectiveCompleted(manual, contextByDay.get(day) || { todayTransactions: [] }).length;
-    days.push({ day, done, total: programRules.length, percent: Math.round(done / programRules.length * 100) });
+    days.push({ day, done, total: programRules.length, percent: Math.round((done / programRules.length) * 100) });
   }
   return days;
 }

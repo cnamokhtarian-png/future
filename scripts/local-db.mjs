@@ -14,10 +14,15 @@ import path from "node:path";
 const db = await PGlite.create();
 
 const migrationsDir = path.join(import.meta.dirname, "..", "drizzle");
-const files = readdirSync(migrationsDir).filter((file) => file.endsWith(".sql")).sort();
+const files = readdirSync(migrationsDir)
+  .filter((file) => file.endsWith(".sql"))
+  .sort();
 for (const file of files) {
   const sql = readFileSync(path.join(migrationsDir, file), "utf8");
-  const statements = sql.split("--> statement-breakpoint").map((statement) => statement.trim()).filter(Boolean);
+  const statements = sql
+    .split("--> statement-breakpoint")
+    .map((statement) => statement.trim())
+    .filter(Boolean);
   for (const statement of statements) {
     await db.exec(statement);
   }
