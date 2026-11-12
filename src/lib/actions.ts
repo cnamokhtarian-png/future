@@ -2,16 +2,24 @@ import "server-only";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { settings, tasks, applications, projects, checkins, transactions, notes, programDays } from "@/db/schema";
+import { settings, tasks, applications, projects, checkins, transactions, notes, programDays, planItems } from "@/db/schema";
 import { todayKey } from "@/lib/types";
 import { programRuleIds } from "@/lib/program";
-import { isDayClosed, closeDay } from "@/lib/daily-review";
+import { PLAN_KIND_IDS } from "@/lib/plan";
+import { isDayClosed, closeDay, generatePlanForToday } from "@/lib/daily-review";
 
 export const id = z.string().min(1).max(150);
 export const title = z.string().trim().min(1, "عنوان را وارد کن").max(250);
 export const safeUrl = z.string().trim().max(2000).refine((value) => !value || /^https?:\/\/[^\s]+$/i.test(value), "لینک باید با https:// یا http:// شروع شود");
 export const clock = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "ساعت باید به شکل ۰۷:۳۰ باشد");
 export const jobStatus = z.enum(["planned", "applied", "interview", "waiting", "offer", "rejected"]);
+const planKind = z.enum(PLAN_KIND_IDS);
+const planPatch = z.object({
+  time: clock.optional(),
+  title: title.optional(),
+  kind: planKind.optional(),
+  note: z.string().max(1000).optional(),
+}).refine((patch) => Object.values(patch).some((value) => value !== undefined), "حداقل یک تغییر بفرست.");
 export const startDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value && value <= todayKey() && value >= "2000-01-01", "تاریخ شروع باید معتبر و تا امروز باشد");
 
 export const actionSchema = z.discriminatedUnion("action", [
@@ -25,7 +33,13 @@ export const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("project.step"), id, index: z.number().int().min(0).max(100), done: z.boolean() }),
   z.object({ action: z.literal("project.link"), id, link: safeUrl }),
   z.object({ action: z.literal("checkin.save"), mood: z.number().int().min(1).max(5), note: z.string().max(5000), cannabisFree: z.boolean().optional(), alcoholFree: z.boolean().optional(), walked: z.boolean().optional(), sleepHours: z.number().int().min(0).max(24).nullable().optional(), cigarettes: z.number().int().min(0).max(200).nullable().optional() }),
-  z.object({ action: z.literal("finance.create"), title, amount: z.number().int().positive().max(2000000000), type: z.enum(["income", "expense", "saving"]) }),
+  z.object({ action: z.literal("finance.create"), title, amount: z.number().int().positive().max(2000000000), type: z.enum(["income", "expense", "saving"]), category: z.enum(["general", "cats"]).default("general") }),
+  z.object({ action: z.literal("plan.add"), time: clock, title, kind: planKind.default("general"), note: z.string().max(1000).optional().default("") }),
+  z.object({ action: z.literal("plan.update"), id, patch: planPatch }),
+  z.object({ action: z.literal("plan.toggle"), id, done: z.boolean() }),
+  z.object({ action: z.literal("plan.reorder"), ids: z.array(id).min(1).max(40) }),
+  z.object({ action: z.literal("plan.drop"), id, dropped: z.boolean() }),
+  z.object({ action: z.literal("plan.generate") }),
   z.object({ action: z.literal("finance.delete"), id }),
   z.object({ action: z.literal("note.save"), id: id.optional(), title, body: z.string().trim().min(1).max(20000) }),
   z.object({ action: z.literal("note.delete"), id }),
@@ -46,7 +60,7 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
     // Once a day is closed (هر شب ساعت ۱۲) it is locked: mutations that touch
     // the day itself are rejected. Free-floating data (notes, jobs, projects,
     // settings) is not day-scoped and stays editable.
-    const dayScopedActions = new Set(["task.create", "task.toggle", "task.time", "task.delete", "checkin.save", "finance.create", "finance.delete", "program.save"]);
+    const dayScopedActions = new Set(["task.create", "task.toggle", "task.time", "task.delete", "checkin.save", "finance.create", "finance.delete", "program.save", "plan.add", "plan.update", "plan.toggle", "plan.reorder", "plan.drop", "plan.generate"]);
     if (dayScopedActions.has(input.action) && (await isDayClosed(todayKey()))) {
       return { ok: false, error: "این روز بسته و جمع‌بندی شده است؛ تغییرهای امروز تا فردا پشتیبانی نمی‌شود.", status: 409 };
     }
@@ -88,7 +102,7 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
         break;
       }
       case "finance.create":
-        await db.insert(transactions).values({ id: crypto.randomUUID(), title: input.title, amount: input.amount, type: input.type });
+        await db.insert(transactions).values({ id: crypto.randomUUID(), title: input.title, amount: input.amount, type: input.type, category: input.category });
         break;
       case "finance.delete":
         await db.delete(transactions).where(eq(transactions.id, input.id));
@@ -109,6 +123,56 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
         if (!result.created && result.row) {
           return { ok: false, error: "امروز قبلاً بسته و جمع‌بندی شده است.", status: 409 };
         }
+        break;
+      }
+      case "plan.add": {
+        const day = todayKey();
+        const rows = await db.select({ position: planItems.position }).from(planItems).where(eq(planItems.day, day));
+        const nextPosition = rows.reduce((max, row) => Math.max(max, row.position), -1) + 1;
+        await db.insert(planItems).values({ id: crypto.randomUUID(), day, position: nextPosition, time: input.time, title: input.title, kind: input.kind, note: input.note, origin: "user" });
+        break;
+      }
+      case "plan.update": {
+        const day = todayKey();
+        const [row] = await db.select().from(planItems).where(eq(planItems.id, input.id));
+        if (!row || row.day !== day) return { ok: false, error: "این ردیف از برنامه پیدا نشد.", status: 404 };
+        const patch: Record<string, unknown> = { ...input.patch, updatedAt: new Date().toISOString() };
+        // اولین انحراف نسبت به نسخه‌ی مربی را ثبت کن تا امشب در جمع‌بندی «جایگزینی/جابه‌جایی» دیده شود.
+        if (row.origin === "ai" && !row.base) {
+          const changedIdentity = (input.patch.title !== undefined && input.patch.title !== row.title)
+            || (input.patch.kind !== undefined && input.patch.kind !== row.kind)
+            || (input.patch.time !== undefined && input.patch.time !== row.time);
+          if (changedIdentity) patch.base = { time: row.time, title: row.title, kind: row.kind };
+        }
+        await db.update(planItems).set(patch).where(eq(planItems.id, input.id));
+        break;
+      }
+      case "plan.toggle": {
+        await db.update(planItems).set({ done: input.done, updatedAt: new Date().toISOString() }).where(eq(planItems.id, input.id));
+        break;
+      }
+      case "plan.reorder": {
+        const day = todayKey();
+        const rows = await db.select({ id: planItems.id }).from(planItems).where(eq(planItems.day, day));
+        const allowed = new Set(rows.map((row) => row.id));
+        let position = 0;
+        for (const itemId of input.ids) {
+          if (!allowed.has(itemId)) continue;
+          await db.update(planItems).set({ position, updatedAt: new Date().toISOString() }).where(eq(planItems.id, itemId));
+          position += 1;
+        }
+        break;
+      }
+      case "plan.drop": {
+        const day = todayKey();
+        const [row] = await db.select().from(planItems).where(eq(planItems.id, input.id));
+        if (!row || row.day !== day) return { ok: false, error: "این ردیف از برنامه پیدا نشد.", status: 404 };
+        await db.update(planItems).set({ dropped: input.dropped, updatedAt: new Date().toISOString() }).where(eq(planItems.id, input.id));
+        break;
+      }
+      case "plan.generate": {
+        const result = await generatePlanForToday();
+        if (!result.created) return { ok: false, error: "امروز برنامه دارد؛ همان‌ها را ویرایش کن.", status: 409 };
         break;
       }
       case "program.save": {

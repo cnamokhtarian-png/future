@@ -5,6 +5,7 @@ import { Flame, Award, CalendarDays, TrendingUp, Check, Zap, Info, Moon, Footpri
 import { fa, todayKey, addDaysKey, type Workspace, type DailyReview } from "@/lib/types";
 import { programRules, programContext, effectiveCompleted, programStreak, recentProgramSnapshots, autoDoneFor, PROGRAM_LENGTH, PROGRAM_NAME, type ProgramRule } from "@/lib/program";
 import { IconBox, Progress, type Mutate } from "@/components/ui";
+import { PlannerCard } from "@/components/planner";
 
 const WEEKDAY = new Intl.DateTimeFormat("fa-IR", { weekday: "narrow", timeZone: "Asia/Tehran" });
 
@@ -100,6 +101,8 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
       </div>
     </section>
 
+    <PlannerCard data={data} mutate={mutate} busy={busy} todayClosed={todayClosed} onCloseToday={askCloseToday} />
+
     <section className="panel">
       <div className="section-heading"><div><h2>قوانین امروز <span className="count-badge">{fa(doneCount)}/{fa(programRules.length)}</span></h2><p>کارهایی که «خودکار» علامت خورده‌اند، مستقیم از چک‌این و ثبت‌های امروزت خوانده می‌شوند. بقیه را خودت تیک بزن.</p></div><span className="pill green"><ShieldCheck size={13} /> روز {fa(challenge.dayNumber)}</span></div>
       <div className="rule-list">{programRules.map((rule) => {
@@ -139,7 +142,7 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
     </section>
     </>
     ) : (
-      <ReviewsTab reviews={reviews} today={today} busy={busy} onCloseToday={askCloseToday} />
+      <ReviewsTab reviews={reviews} />
     )}
 
     <div className="medical-note"><Info size={19} /><div><strong>یک برنامه سخت، جای درمان نیست.</strong><p>«چالش ۷۵ روزه» ابزار انضباط است، نه درمان افسردگی، اضطراب یا اعتیاد. اگر خلق، خواب یا میلت به آسیب جدی تغییر کرد، فوراً با روان‌شناس، روان‌پزشک یا اورژانس (۱۱۵) / اورژانس اجتماعی (۱۲۳) تماس بگیر. قطع ناگهانی الکل در مصرف سنگین و منظم، خطرناک است و باید با ارزیابی پزشک انجام شود. ورزش را اگر بیماری قلبی یا محدودیت حرکتی داری، فقط با نظر پزشک شروع کن.</p></div></div>
@@ -158,13 +161,7 @@ const dayLongLabel = (day: string) =>
 const dayShortLabel = (day: string) =>
   new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", month: "numeric", day: "numeric" }).format(new Date(`${day}T12:00:00+03:30`));
 
-function ReviewsTab({ reviews, today, busy, onCloseToday }: { reviews: DailyReview[]; today: string; busy: boolean; onCloseToday: () => void }) {
-  const featured = reviews.find((item) => item.nextPlan);
-  const featuredLabel = featured
-    ? addDaysKey(featured.day, 1) === today
-      ? "برنامه امروز — نوشته‌ی امشبِ مربی"
-      : `برنامه‌ی روزِ ${dayLongLabel(addDaysKey(featured.day, 1))}`
-    : null;
+function ReviewsTab({ reviews }: { reviews: DailyReview[] }) {
   const ascending = [...reviews].reverse();
   const total = reviews.length;
   const perfect = reviews.filter((item) => item.percent === 100).length;
@@ -190,23 +187,6 @@ function ReviewsTab({ reviews, today, busy, onCloseToday }: { reviews: DailyRevi
 
   return (
     <>
-      <section className="panel plan-card">
-        <div className="plan-card-head">
-          <span className="plan-card-icon"><Sparkles size={19} /></span>
-          <div className="plan-card-copy">
-            <span className="eyebrow purple-text">مربی روبه‌راه · هر شب ساعت ۱۲</span>
-            <h2>{featuredLabel || "برنامه‌ی روز بعد"}</h2>
-            {featured?.focus && <p className="plan-focus">تمرکز اصلی: {featured.focus}</p>}
-          </div>
-          <button className="button outline small" disabled={busy} onClick={onCloseToday}><Lock size={13} /> بستن و جمع‌بندی امروز</button>
-        </div>
-        {featured ? (
-          <div className="plan-body">{featured.nextPlan}</div>
-        ) : (
-          <p className="field-help">هنوز برنامه‌ای نوشته نشده؛ امشب ساعت ۱۲ به‌طور خودکار ساخته می‌شود، یا اگر می‌خواهی همین حالا «بستن و جمع‌بندی امروز» را بزن (امروز قفل خواهد شد).</p>
-        )}
-      </section>
-
       <section className="panel">
         <div className="section-heading"><div><h2>نمای کلی مسیر</h2><p>جمعِ کل کارنامه‌ها؛ روبه‌راه یعنی عددها بالا بروند، نه حس‌ها.</p></div><CalendarCheck size={18} className="purple-text" /></div>
         <div className="review-stats">{tiles.map((tile) => <div className="review-stat" key={tile.label}><strong>{tile.value}</strong><span>{tile.label}</span></div>)}</div>
@@ -248,6 +228,15 @@ function ReviewsTab({ reviews, today, busy, onCloseToday }: { reviews: DailyRevi
                   {row.summary && <p className="review-summary">{row.summary}</p>}
                   {missedTitles.length > 0 && <p className="review-missed">جا‌مانده: {missedTitles.join("، ")}</p>}
                   {row.gratitude.trim() && <p className="review-gratitude">جمله‌ات: «{row.gratitude.trim()}»</p>}
+                  {row.deltas && row.deltas.planned > 0 && (
+                    <div className="review-deltas">
+                      <span className="review-deltas-head">برنامه‌ی آن روز: {fa(row.deltas.done)} از {fa(row.deltas.planned)} آیتم انجام شد</span>
+                      {row.deltas.substituted.length > 0 && <span className="review-deltas-line">جایگزینی: {row.deltas.substituted.slice(0, 3).map((d) => `«${d.from.slice(0, 40)}» ← «${d.to.slice(0, 40)}»`).join(" · ")}{row.deltas.substituted.length > 3 ? ` و ${fa(row.deltas.substituted.length - 3)} مورد دیگر` : ""}</span>}
+                      {row.deltas.dropped.length > 0 && <span className="review-deltas-line">کنار گذاشته شد: {row.deltas.dropped.slice(0, 3).join("، ")}{row.deltas.dropped.length > 3 ? ` و ${fa(row.deltas.dropped.length - 3)} مورد دیگر` : ""}</span>}
+                      {row.deltas.added.length > 0 && <span className="review-deltas-line">با خواست خودت اضافه شد: {row.deltas.added.slice(0, 3).join("، ")}</span>}
+                      {row.deltas.notes.length > 0 && <span className="review-deltas-line">یادداشت‌هایت: {row.deltas.notes.slice(0, 2).join(" | ")}</span>}
+                    </div>
+                  )}
                   {row.nextPlan && (
                     <details className="review-plan">
                       <summary>برنامه‌ی نوشته‌شده برای روز بعد</summary>

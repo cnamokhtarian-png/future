@@ -23,7 +23,7 @@ const functionDeclarations = [
   { name: "create_task", description: "ثبت یک قدم/کار جدید در برنامه امروز کاربر.", parameters: { type: "object", properties: { title: { type: "string", description: "عنوان قدم به فارسی" }, category: { type: "string", enum: ["career", "project", "health", "learning", "personal"], description: "دسته‌بندی قدم" }, minutes: { type: "number", description: "زمان تقریبی به دقیقه" }, time: { type: "string", description: "ساعت به شکل HH:MM (مثلاً 09:30) یا خالی" } }, required: ["title"] } },
   { name: "toggle_task", description: "تیک زدن یا برداشتن تیک یک قدم امروز. می‌توانی id قدم بدهی یا بخشی از عنوان آن را؛ اگر چند قدم مطابق بود، از کاربر بپرس.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string", description: "بخشی از عنوان قدم (وقتی id نداری)" }, done: { type: "boolean", description: "اگر مشخص نیست، برعکس وضعیت فعلی اعمال می‌شود" } } } },
   { name: "delete_task", description: "حذف یک قدم. هرگز بدون تأیید کاربر انجام نمی‌شود؛ اول درخواست را بفرست تا کاربر تأیید کند.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" } } } },
-  { name: "create_transaction", description: "ثبت یک درآمد، هزینه یا پس‌انداز (همیشه به تومان).", parameters: { type: "object", properties: { type: { type: "string", enum: ["income", "expense", "saving"] }, title: { type: "string", description: "شرح تراکنش" }, amount: { type: "number", description: "مبلغ به تومان (عدد صحیح مثبت)" } }, required: ["type", "title", "amount"] } },
+  { name: "create_transaction", description: "ثبت یک درآمد، هزینه یا پس‌انداز (همیشه به تومان). برای خرج‌های مربوط به گربه‌ها (غذا، دام‌پزشک، وسایل) category را cats بفرست.", parameters: { type: "object", properties: { type: { type: "string", enum: ["income", "expense", "saving"] }, title: { type: "string", description: "شرح تراکنش" }, amount: { type: "number", description: "مبلغ به تومان (عدد صحیح مثبت)" }, category: { type: "string", enum: ["general", "cats"], description: "general عادی (پیش‌فرض)؛ cats هزینه‌های گربه‌ها" } }, required: ["type", "title", "amount"] } },
   { name: "delete_transaction", description: "حذف یک تراکنش. هرگز بدون تأیید کاربر انجام نمی‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string", description: "بخشی از شرح تراکنش" } } } },
   { name: "save_checkin", description: "ثبت چک‌این امروز کاربر (حال، عادت‌ها، خواب و سیگار). فقط فیلدهایی که کاربر گفته را بفرست؛ بقیه حفظ می‌شوند.", parameters: { type: "object", properties: { mood: { type: "number", description: "۱ خسته تا ۵ عالی" }, note: { type: "string" }, cannabisFree: { type: "boolean" }, alcoholFree: { type: "boolean" }, walked: { type: "boolean" }, sleepHours: { type: "number", description: "ساعت خواب در یک شبانه‌روز" }, cigarettes: { type: "number", description: "تعداد سیگار امروز (۰ یعنی هیچ)" } } } },
   { name: "save_note", description: "ذخیره یا به‌روزرسانی یک یادداشت. بدون id، یادداشت تازه ساخته می‌شود.", parameters: { type: "object", properties: { id: { type: "string" }, title: { type: "string" }, body: { type: "string" } }, required: ["title", "body"] } },
@@ -81,6 +81,27 @@ function buildContext(workspace: Workspace) {
     return `- ${monthLabelOf(key)}: درآمد ${fa(value.income)} | هزینه ${fa(value.expense)} | پس‌انداز ${fa(value.saving)} | مانده ${fa(net)} (تومان)`;
   });
 
+  // گربه‌ها: مجموع خرج‌های این ماه با برچسب cats
+  let catMonthTotal = 0;
+  for (const item of workspace.transactions) {
+    if (item.type !== "expense" || item.category !== "cats") continue;
+    const parsed = parseTimestamp(item.createdAt);
+    if (parsed && monthKeyOf(parsed) === currentMonthKey) catMonthTotal += item.amount;
+  }
+
+  // برنامهٔ امروز (موارد انجام‌نشدنی و یادداشت‌ها مهم‌اند)
+  const todayPlanItems = workspace.planItems.filter((item) => item.day === today && !item.dropped);
+  const planDone = todayPlanItems.filter((item) => item.done).length;
+  const planTotal = todayPlanItems.length;
+  const planLines: string[] = todayPlanItems.slice(0, 20).map((item) => {
+    const flags: string[] = [];
+    if (item.done) flags.push("انجام شد"); else flags.push("انجام نشد");
+    if (item.base && item.base.title !== item.title) flags.push(`جایگزین «${item.base.title.slice(0, 60)}»`);
+    if (item.note.trim()) flags.push(`یادداشت: ${item.note.trim().slice(0, 80)}`);
+    return `- ${item.time} ${item.title} [${flags.join(" | ")}]`;
+  });
+  for (const item of workspace.planItems.filter((entry) => entry.day === today && entry.dropped).slice(0, 6)) planLines.push(`- ${item.time} ${item.title} [از برنامه کنار گذاشته شد]`);
+
   const projects = workspace.projects.map((project) => {
     const done = project.steps.filter((step) => step.done).length;
     return `- ${project.name} (${project.id}): ${done}/${project.steps.length} مرحله — وضعیت: ${project.status === "active" ? "در اولویت" : project.status === "queued" ? "بعدی" : "آزمایشی/متوقف"}`;
@@ -100,6 +121,9 @@ function buildContext(workspace: Workspace) {
     `شناسه قوانین چالش: wake=بیداری قبل ۷ صبح، workout=۴۵ دقیقه ورزش، water=۲٫۵ لیتر آب، read=۱۰ صفحه کتاب، silent=۱۰ دقیقه سکوت/ذکر، clean=بدون سیگار/الکل/مواد، walk=۱۵ دقیقه پیاده‌روی، deepwork=بلوک کار عمیق، finance=ثبت کامل دخل و خرج، gratitude=شکرگزاری شبانه، nutrition=تغذیه واقعی، sleep=خواب قبل ۱۲ شب`,
     `وضعیت چالش ۷۵ روزه امروز (${fa(completedToday.length)} از ${fa(programRules.length)} قانون): ${completedToday.length ? completedToday.join("، ") : "هنوز چیزی تیک نخورده"} | زنجیره فعلی: ${fa(challenge.streak)} روز | بهترین: ${fa(challenge.best)} روز`,,
     workspace.dailyReviews.length ? `جمع‌بندی روزهای بسته‌شدهٔ اخیر (روز به روز):\n${workspace.dailyReviews.slice(0, 3).map((review) => `- ${review.day}: ${fa(review.done)} از ${fa(review.total)} (${fa(review.percent)}٪)${review.summary ? ` — ${review.summary.slice(0, 160)}` : ""}`).join("\n")}` : `هنوز روزی بسته و جمع‌بندی نشده.`,
+    planLines.length ? `برنامهٔ امروز (${fa(planDone)} از ${fa(planTotal)} آیتم انجام‌شده):` : `برنامه‌ای برای امروز ثبت نشده.`,
+    ...planLines,
+    catMonthTotal > 0 ? `هزینهٔ گربه‌ها این ماه: ${fa(catMonthTotal)} تومان (ثبت با برچسب «گربه‌ها»)` : ``,
     ``,
     `مالی این ماه (${monthLabelOf(currentMonthKey)}): درآمد ${fa(currentMonth.income)} | هزینه ${fa(currentMonth.expense)} | پس‌انداز ${fa(currentMonth.saving)} | مانده ${fa(currentMonth.income - currentMonth.expense - currentMonth.saving)} تومان`,
     `ماه‌های اخیر:`,
@@ -212,9 +236,11 @@ async function executeTool(name: string, args: Record<string, unknown>, workspac
       if (!["income", "expense", "saving"].includes(type)) return { kind: "error", error: "نوع تراکنش باید income، expense یا saving باشد." };
       const amount = typeof args.amount === "number" ? Math.trunc(args.amount) : Number(args.amount);
       if (!Number.isFinite(amount) || amount <= 0) return { kind: "error", error: "مبلغ باید عددی مثبت (به تومان) باشد." };
-      const result = await runAction({ action: "finance.create", title: String(args.title || "").trim() || "تراکنش", amount, type });
+      const category = args.category === "cats" ? "cats" : "general";
+      const result = await runAction({ action: "finance.create", title: String(args.title || "").trim() || "تراکنش", amount, type, category });
       const typeLabel = type === "income" ? "درآمد" : type === "expense" ? "هزینه" : "پس‌انداز";
-      return result.ok ? { kind: "executed", label: `ثبت ${typeLabel} ${fa(amount)} تومان` } : { kind: "error", error: result.error };
+      const catNote = category === "cats" ? " (گربه‌ها)" : "";
+      return result.ok ? { kind: "executed", label: `ثبت ${typeLabel} ${fa(amount)} تومان${catNote}` } : { kind: "error", error: result.error };
     }
     case "delete_transaction": {
       const resolved = resolveTransaction(workspace, args);
