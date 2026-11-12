@@ -1,3 +1,4 @@
+import { tehranDayKey } from "@/lib/tehran-day";
 import { projectProgress, type Task, type Transaction, type Workspace } from "@/lib/types";
 
 export const timeBlocks = [
@@ -12,7 +13,7 @@ export type DayStats = { total: number; done: number; percent: number; met: bool
 export function dayKey(offset = 0) {
   const date = new Date();
   date.setDate(date.getDate() - offset);
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return tehranDayKey(date);
 }
 
 export function dayStats(tasks: Task[], day: string): DayStats {

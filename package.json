@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-postgresql-template",
+  "name": "robeh-rah",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,13 +9,14 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "test": "npm run typecheck && npm run lint && npm run build",
-    "test:e2e": "tsx scripts/smoke.ts"
+    "test": "npm run typecheck && npm run lint && npm run test:unit && npm run build",
+    "test:e2e": "tsx scripts/smoke.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:unit": "vitest run"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",
-    "@playwright/test": "^1.65.0",
-    "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
     "lucide-react": "^1.72.0",
     "next": "16.4.2",
@@ -23,23 +24,32 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "server-only": "^0.0.1",
-    "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.16",
     "@electric-sql/pglite-socket": "^0.2.19",
+    "@playwright/test": "^1.65.0",
     "@sparticuz/chromium": "^153.0.0",
     "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.19.15",
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "dotenv": "17.3.1",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.4.2",
     "postcss": "8.5.23",
+    "prettier": "^3.10.1",
     "tailwindcss": "4.1.17",
-    "typescript": "5.9.3"
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "version": "1.0.0",
+  "description": "روبه‌راه؛ فضای شخصی تک‌کاربره برای ساختن مسیر زندگی (Next.js + PostgreSQL)",
+  "engines": {
+    "node": ">=20"
   }
 }

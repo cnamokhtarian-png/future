@@ -13,6 +13,18 @@ function unauthorized() {
   });
 }
 
+// Compare on UTF-8 bytes instead of === so the check does not short-circuit
+// on the first mismatched character (a basic timing-attack mitigation).
+function safeEqual(a: string, b: string): boolean {
+  const encoder = new TextEncoder();
+  const x = encoder.encode(a);
+  const y = encoder.encode(b);
+  if (x.length !== y.length) return false;
+  let diff = 0;
+  for (let index = 0; index < x.length; index += 1) diff |= x[index] ^ y[index];
+  return diff === 0;
+}
+
 export function proxy(request: NextRequest) {
   const user = process.env.SITE_AUTH_USER;
   const password = process.env.SITE_AUTH_PASSWORD;
@@ -28,7 +40,7 @@ export function proxy(request: NextRequest) {
       if (separator !== -1) {
         const givenUser = decoded.slice(0, separator);
         const givenPassword = decoded.slice(separator + 1);
-        if (givenUser === user && givenPassword === password) {
+        if (safeEqual(givenUser, user) && safeEqual(givenPassword, password)) {
           return NextResponse.next();
         }
       }

@@ -11,6 +11,7 @@ import {
   type ProgramContext,
 } from "@/lib/program";
 import { callGemini, userInputStep } from "@/lib/gemini";
+import { tehranDayKey } from "@/lib/tehran-day";
 import {
   computeDeltas,
   renderPlanText,
@@ -27,7 +28,7 @@ export type DailyReviewRow = typeof dailyReviews.$inferSelect;
 // Day keys follow the app's canonical Asia/Tehran calendar (UTC+3:30, no DST).
 
 export function dayKeyOf(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+  return tehranDayKey(date);
 }
 
 function faDayLabel(day: string): string {

@@ -1,4 +1,5 @@
 import { todayKey, type Checkin, type Transaction, type Workspace } from "@/lib/types";
+import { tehranDayKey } from "@/lib/tehran-day";
 
 // «چالش ۷۵ روزه روبه‌راه» — یک برنامه سخت‌گیرانه و استاندارد، الهام‌گرفته از
 // 75 Hard (اندی کاوی)، Atomic Habits (جیمز کلیر)، Implementation Intentions
@@ -162,6 +163,4 @@ export function recentProgramSnapshots(workspace: Workspace, count = 14) {
   return days;
 }
 
-function dayKeyOf(date: Date) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
-}
+const dayKeyOf = tehranDayKey;

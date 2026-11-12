@@ -1,4 +1,5 @@
 import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays, dailyReviews, planItems, socialLogs } from "@/db/schema";
+import { tehranDayKey } from "@/lib/tehran-day";
 
 export type Task = typeof tasks.$inferSelect;
 export type Application = typeof applications.$inferSelect;
@@ -30,7 +31,7 @@ export type View = "assistant" | "overview" | "roadmap" | "career" | "projects" 
 export type Mutation = { action: string; [key: string]: unknown };
 
 export function todayKey() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tehran", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  return tehranDayKey();
 }
 
 export function fa(value: number | string) {
