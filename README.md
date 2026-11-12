@@ -29,13 +29,32 @@ npm install
 npm run build        # production build
 npm run start        # اجرای سرور production
 npm run dev          # حالت توسعه
-npm run test         # typecheck + lint + build
+npm run test         # typecheck + lint + unit tests + build
+npm run test:unit    # unit tests for the pure logic (stats/program/plan/types)
+npm run format       # format the whole repo with Prettier
 node scripts/local-db.mjs &              # PostgreSQL محلی (PGlite، بدون نیاز به شبکه)
 DATABASE_URL=postgresql://127.0.0.1:55432/postgres npm run start
 DATABASE_URL=postgresql://127.0.0.1:55432/postgres TEST_BASE_URL=http://localhost:3000 npm run test:e2e
 ```
 
 `npm run test:e2e` تست کامل واسط و API (با Playwright) است. در محیط‌هایی که CDN پلی‌رایت مسدود است، از Chromium بسته‌ی npm (`@sparticuz/chromium`) با کتابخانه‌های سیستمی `al2023` استفاده می‌شود؛ در سایر سیستم‌ها کافی است `npx playwright install chromium` را یک بار اجرا کنید.
+
+## ساختار پروژه
+
+```
+src/
+  app/                 # App Router: layout، page، error، globals.css + styles/ (partial های CSS)
+    api/               # /api/workspace (CRUD)، /api/assistant (جمینا)، /api/cron/daily، /api/health
+  components/          # journey-app (پوسته اصلی) + هر نما در پوشهٔ خودش؛ views/ barrel برای نماها
+  db/                  # schema drizzle (اسکیمای جدای robehrah) و اتصال pool
+  lib/                 # منطق خالص و server-only: types، stats، program، plan، daily-review، assistant…
+drizzle/               # migrations
+scripts/               # local-db.mjs (PGlite محلی) و smoke.ts (e2e با Playwright)
+```
+
+- تست واحد: `npm run test:unit` (vitest) برای منطق خالص — زنجیره و ثبات روزانه، weekStats («کارنامهٔ ۷ روز گذشته»)، محاسبهٔ دلتاهای برنامه و قوانین خودکار چالش ۷۵ روزه.
+- CI: فایل `.github/workflows/ci.yml` در هر push روی main و شاخه‌های `arena/**` → typecheck + lint + unit + build.
+- استایل‌ها به partialهای `src/app/styles/` تقسیم شده‌اند و `globals.css` فقط فهرست import‌ هاست (ترتیب آن‌ها مهم است).
 
 ## دیتابیس
 
