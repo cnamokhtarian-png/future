@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getWorkspace } from "@/lib/data";
 import { runAction } from "@/lib/actions";
-import { callGemini, GeminiError, type GeminiContent } from "@/lib/gemini";
+import { callGemini, GeminiError, userInputStep, functionResultStep, type InteractionStep } from "@/lib/gemini";
 import { todayKey, fa, journeyDay, type Mutation, type Workspace } from "@/lib/types";
 import { programRules, programContext, effectiveCompleted, programStreak, parseTimestamp, monthKeyOf, monthLabelOf } from "@/lib/program";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 90;
 
 const messageSchema = z.object({
   role: z.enum(["user", "model"]),
@@ -318,8 +318,19 @@ export async function POST(request: Request) {
     const history = parsed.data.messages.slice(-24);
 
     let workspace = await getWorkspace();
+    // The Interactions API has no separate system-instruction slot in its
+    // documented stable shape, so the system briefing travels inside the
+    // user input, followed by the recent conversation transcript.
     const systemInstruction = buildSystemPrompt(buildContext(workspace));
-    const contents: GeminiContent[] = history.map((message) => ({ role: message.role, parts: [{ text: message.text }] }));
+    const transcript = [
+      systemInstruction,
+      "",
+      "گفتگوی اخیر با کاربر (از قدیمی به جدید):",
+      ...history.map((message) => `${message.role === "user" ? "کاربر" : "دستیار"}: ${message.text}`),
+      "",
+      "به آخرین پیام کاربر پاسخ بده؛ اگر لازم است از ابزارها استفاده کن.",
+    ].join("\n");
+    const inputSteps: InteractionStep[] = [userInputStep(transcript)];
 
     const performed: string[] = [];
     let navigate: string | undefined;
@@ -328,42 +339,37 @@ export async function POST(request: Request) {
     let reply = "";
 
     for (let iteration = 0; iteration < 5; iteration += 1) {
-      const response = await callGemini({ systemInstruction, contents, tools: [{ functionDeclarations }] });
-      const parts = response.candidates?.[0]?.content?.parts ?? [];
-      const textParts = parts.map((part) => part.text || "").filter(Boolean);
-      const calls = parts
-        .map((part) => part.functionCall)
-        .filter((call): call is { name: string; args?: Record<string, unknown> } => Boolean(call?.name));
+      const outcome = await callGemini({ inputSteps, tools: [...functionDeclarations] });
 
-      if (!calls.length) {
-        reply = textParts.join("\n").trim();
+      if (!outcome.functionCalls.length) {
+        reply = outcome.text;
         break;
       }
 
-      // Preserve the raw model parts so the function response can be chained.
-      contents.push({ role: "model", parts });
-      const functionResponses: unknown[] = [];
+      // Echo the model's steps verbatim (thought/function_call) as documented,
+      // then append each function result.
+      inputSteps.push(...outcome.steps);
+      const calls = outcome.functionCalls;
       for (const call of calls) {
-        const outcome = await executeTool(String(call.name), (call.args || {}) as Record<string, unknown>, workspace);
+        const executed = await executeTool(call.name, call.args, workspace);
         let responsePayload: Record<string, unknown>;
-        if (outcome.kind === "executed") {
-          performed.push(outcome.label);
+        if (executed.kind === "executed") {
+          performed.push(executed.label);
           mutated = true;
           // Refresh the snapshot so chained tool calls see their own effects.
           workspace = await getWorkspace();
-          responsePayload = { ok: true, message: outcome.label };
-        } else if (outcome.kind === "confirm") {
-          if (!pendingConfirmation) pendingConfirmation = { label: outcome.label, action: outcome.action };
+          responsePayload = { ok: true, message: executed.label };
+        } else if (executed.kind === "confirm") {
+          if (!pendingConfirmation) pendingConfirmation = { label: executed.label, action: executed.action };
           responsePayload = { ok: false, pending: true, message: "حذف بدون تأیید کاربر انجام نمی‌شود؛ ابزار روی سایت منتظر تأیید اوست. فقط بگو آماده‌ی حذف است و دقیقاً بپرس که تأیید می‌کند یا نه." };
-        } else if (outcome.kind === "navigate") {
-          navigate = outcome.view;
-          responsePayload = { ok: true, message: `بخش ${outcome.view} برای کاربر باز شد.` };
+        } else if (executed.kind === "navigate") {
+          navigate = executed.view;
+          responsePayload = { ok: true, message: `بخش ${executed.view} برای کاربر باز شد.` };
         } else {
-          responsePayload = { ok: false, error: outcome.error };
+          responsePayload = { ok: false, error: executed.error };
         }
-        functionResponses.push({ functionResponse: { name: call.name, response: responsePayload } });
+        inputSteps.push(functionResultStep(call.name, call.id, responsePayload));
       }
-      contents.push({ role: "function", parts: functionResponses });
     }
 
     if (!reply) reply = performed.length ? "انجام شد. چیز دیگه‌ای هست که برات انجام بدم؟" : "به نظر می‌رسد الان پاسخی ندارم؛ دوباره بپرس یا کمی دقیق‌تر بگو چه می‌خواهی.";

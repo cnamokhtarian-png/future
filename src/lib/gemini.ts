@@ -1,17 +1,12 @@
 import "server-only";
 
-export type GeminiPart =
-  | { text: string }
-  | { functionCall: { name: string; args?: Record<string, unknown> } }
-  | { functionResponse?: never };
+export type InteractionStep = Record<string, unknown>;
 
-export type GeminiContent = { role: "user" | "model" | "function"; parts: unknown[] };
-
-const API_ROOT = "https://generativelanguage.googleapis.com/v1beta/models";
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const API_ROOT = "https://generativelanguage.googleapis.com/v1beta";
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 // Ordered fallbacks: if the primary model is not available for this account/key,
-// we transparently try cheaper/faster ones before surfacing an error.
-const MODEL_CANDIDATES = [...new Set([GEMINI_MODEL, "gemini-2.5-flash", "gemini-2.5-flash-lite"])];
+// we transparently try the others before surfacing an error.
+const MODEL_CANDIDATES = [...new Set([GEMINI_MODEL, "gemini-3.5-flash", "gemini-3.5-flash-lite"])];
 
 export class GeminiError extends Error {
   constructor(message: string, readonly status?: number) {
@@ -20,13 +15,21 @@ export class GeminiError extends Error {
   }
 }
 
-async function postToGemini(key: string, model: string, body: Record<string, unknown>) {
+export function userInputStep(text: string): InteractionStep {
+  return { type: "user_input", content: [{ type: "text", text }] };
+}
+
+export function functionResultStep(name: string, callId: string | undefined, result: unknown): InteractionStep {
+  return { type: "function_result", name, call_id: callId, result: [{ type: "text", text: JSON.stringify(result) }] };
+}
+
+async function postToInteractions(key: string, body: Record<string, unknown>) {
   try {
-    return await fetch(`${API_ROOT}/${model}:generateContent`, {
+    return await fetch(`${API_ROOT}/interactions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key, "Api-Revision": "2026-05-20" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(50_000),
+      signal: AbortSignal.timeout(45_000),
       cache: "no-store",
     });
   } catch (error) {
@@ -38,58 +41,70 @@ async function postToGemini(key: string, model: string, body: Record<string, unk
   }
 }
 
-function buildBody(systemInstruction: string, contents: GeminiContent[], tools: unknown[] | undefined, withThinking: boolean): Record<string, unknown> {
-  return {
-    system_instruction: { parts: [{ text: systemInstruction }] },
-    contents,
-    ...(tools?.length ? { tools } : {}),
-    // Responses are designed to be short; a tight cap keeps 3.5-flash fast enough
-    // for an interactive chat instead of generating a long essay per turn.
-    generationConfig: withThinking
-      ? { maxOutputTokens: 900, temperature: 0.7, thinkingConfig: { thinkingLevel: "low" } }
-      : { maxOutputTokens: 900, temperature: 0.7 },
-  };
-}
+export type InteractionOutcome = {
+  steps: InteractionStep[];
+  functionCalls: Array<{ name: string; args: Record<string, unknown>; id?: string }>;
+  text: string;
+};
 
-async function readErrorMessage(response: Response): Promise<string> {
-  try {
-    return ((await response.clone().json()) as { error?: { message?: string } })?.error?.message || "";
-  } catch {
-    return "";
-  }
-}
-
-async function generateWithModel(key: string, model: string, systemInstruction: string, contents: GeminiContent[], tools: unknown[] | undefined) {
-  let response = await postToGemini(key, model, buildBody(systemInstruction, contents, tools, true));
-  if (response.status === 400) {
-    const message = await readErrorMessage(response);
-    if (/thinking/i.test(message)) {
-      response = await postToGemini(key, model, buildBody(systemInstruction, contents, tools, false));
+function extractText(data: Record<string, unknown>): string {
+  if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
+  const texts: string[] = [];
+  const steps = Array.isArray(data.steps) ? data.steps : [];
+  for (const step of steps) {
+    if (!step || typeof step !== "object") continue;
+    const record = step as Record<string, unknown>;
+    if (typeof record.text === "string") texts.push(record.text);
+    const content = record.content;
+    if (typeof content === "string") texts.push(content);
+    else if (Array.isArray(content)) {
+      for (const item of content) {
+        if (typeof item === "string") texts.push(item);
+        else if (item && typeof item === "object" && typeof (item as Record<string, unknown>).text === "string") texts.push((item as Record<string, unknown>).text as string);
+      }
     }
   }
-  return response;
+  return texts.join("\n").trim();
 }
 
-export async function callGemini({ systemInstruction, contents, tools }: { systemInstruction: string; contents: GeminiContent[]; tools?: unknown[] }) {
+function parseOutcome(data: Record<string, unknown>): InteractionOutcome {
+  const steps = (Array.isArray(data.steps) ? data.steps : []) as InteractionStep[];
+  const functionCalls = steps
+    .map((step) => step as Record<string, unknown>)
+    .filter((step) => step.type === "function_call" && typeof step.name === "string")
+    .map((step) => ({
+      name: step.name as string,
+      args: (step.arguments && typeof step.arguments === "object" ? step.arguments : {}) as Record<string, unknown>,
+      id: typeof step.id === "string" ? step.id : undefined,
+    }));
+  return { steps, functionCalls, text: extractText(data) };
+}
+
+export async function callGemini({ inputSteps, tools }: { inputSteps: InteractionStep[]; tools?: unknown[] }): Promise<InteractionOutcome> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new GeminiError("کلید Gemini روی سرور تنظیم نشده است.", 500);
 
   const failures: Array<{ model: string; status: number; message: string }> = [];
   for (const model of MODEL_CANDIDATES) {
-    const response = await generateWithModel(key, model, systemInstruction, contents, tools);
+    const interactiveTools = tools?.length
+      ? [...(tools as Array<Record<string, unknown>>)].map((tool) => (tool.type ? tool : { type: "function", ...tool }))
+      : undefined;
+    const response = await postToInteractions(key, {
+      model,
+      input: inputSteps,
+      ...(interactiveTools ? { tools: interactiveTools } : {}),
+      store: false,
+    });
     if (response.ok) {
-      try {
-        return await response.json() as {
-          candidates?: Array<{ content?: { role?: string; parts?: Array<{ text?: string; functionCall?: { name?: string; args?: Record<string, unknown> } }> } }>;
-        };
-      } catch {
-        throw new GeminiError("پاسخ غیرمنتظره‌ای از جمینا دریافت شد.", 502);
-      }
+      let data: Record<string, unknown>;
+      try { data = (await response.json()) as Record<string, unknown>; }
+      catch { throw new GeminiError("پاسخ غیرمنتظره‌ای از جمینا دریافت شد.", 502); }
+      return parseOutcome(data);
     }
-    const message = await readErrorMessage(response);
+    let message = "";
+    try { message = ((await response.json()) as { error?: { message?: string } })?.error?.message || ""; } catch { /* no body */ }
     failures.push({ model, status: response.status, message });
-    // Auth/quota/model errors can be model-specific; try the next candidate.
-    // Server-side 5xx usually affect all models, so stop early.
+    // Auth/model/quota errors can be model-specific; try the next candidate.
     if (response.status >= 500) break;
   }
 
