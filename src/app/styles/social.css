@@ -1,0 +1,238 @@
+/* روبه‌راه — پیوند اجتماعی
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+/* ── پیوند اجتماعی ───────────────────────────────── */
+
+.social-safety {
+  background: #fdf0ee;
+  border-color: #f0d5cf;
+  color: #8a4b42;
+}
+.social-safety strong {
+  font-size: 11.5px;
+  display: block;
+}
+.social-safety p {
+  font-size: 10px;
+  line-height: 2;
+  margin-top: 3px;
+}
+.social-safety b {
+  color: #7a3a33;
+}
+.social-facts {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.social-facts li {
+  font-size: 10.5px;
+  line-height: 2.15;
+  color: #55496b;
+  background: #faf8fd;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px 13px;
+}
+.social-facts strong {
+  color: #443553;
+}
+.social-quote {
+  margin-top: 12px;
+  font-size: 10px;
+  color: #6d4b96;
+  background: #efe7f8;
+  border-radius: 9px;
+  padding: 9px 12px;
+  line-height: 2;
+}
+.social-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.social-stat {
+  background: #faf8fd;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.social-stat strong {
+  display: block;
+  font-size: 19px;
+  color: #5d4391;
+  line-height: 1.4;
+}
+.social-stat span {
+  font-size: 8.5px;
+  color: var(--muted);
+  line-height: 1.9;
+  display: block;
+  margin-top: 4px;
+}
+.social-stat.gap {
+  background: #f0faf3;
+  border-color: #d9ecdd;
+}
+.social-stat.gap strong {
+  color: #3f6b52;
+}
+.social-ladder {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  padding: 0;
+  margin-top: 4px;
+}
+.social-ladder li {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px 12px;
+}
+.social-step {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: #efe7f8;
+  color: #8c68bb;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.social-ladder strong {
+  font-size: 10px;
+  color: #443553;
+  display: block;
+  line-height: 1.9;
+}
+.social-ladder p {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.95;
+  margin-top: 2px;
+}
+.social-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+.social-ranges {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.social-ranges label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 10px;
+  color: #55496b;
+  background: #faf8fd;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px 12px;
+}
+.social-ranges strong {
+  color: #5d4391;
+}
+.social-ranges input[type="range"] {
+  width: 100%;
+  accent-color: #8c68bb;
+}
+.social-log-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  border-top: 1px solid #efeaf4;
+  padding-top: 14px;
+}
+.social-log-list > li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  padding: 10px 12px;
+  background: #fff;
+}
+.social-log-main {
+  flex: 1;
+  min-width: 0;
+}
+.social-log-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+.social-log-top strong {
+  font-size: 11px;
+  color: #443553;
+}
+.social-log-date {
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.social-log-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 8.5px;
+  border-radius: 20px;
+  padding: 3px 9px;
+  line-height: 1.6;
+}
+.chip.prediction {
+  background: #fdf1ef;
+  color: #a2585f;
+}
+.chip.outcome {
+  background: #f0faf3;
+  color: #3f6b52;
+}
+.chip.gap-good {
+  background: #efe7f8;
+  color: #6d4b96;
+}
+.social-log-feared {
+  font-size: 9px;
+  color: #a2585f;
+  margin-top: 6px;
+  line-height: 1.9;
+}
+.social-log-note {
+  font-size: 9.5px;
+  color: #55496b;
+  margin-top: 4px;
+  line-height: 2;
+}
+@media (max-width: 840px) {
+  .social-ladder {
+    grid-template-columns: 1fr;
+  }
+  .social-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .social-ranges {
+    grid-template-columns: 1fr;
+  }
+}

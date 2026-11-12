@@ -1,0 +1,230 @@
+/* روبه‌راه — چالش ۷۵ روزه: شکرگزاری، قوانین، ۱۴ روز اخیر و جمع‌بندی‌ها
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+/* The 75-day discipline program */
+
+.gratitude-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  margin-top: 4px;
+}
+.gratitude-row textarea,
+.weekly-review textarea {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 13px;
+  background: #fff;
+  resize: vertical;
+  line-height: 2;
+  color: var(--ink);
+  width: 100%;
+}
+.gratitude-row textarea:focus,
+.weekly-review textarea:focus {
+  outline: 2px solid #8a64b944;
+  border-color: var(--purple);
+}
+.gratitude-row .button {
+  align-self: flex-start;
+}
+.section-heading.compact h3 {
+  font-size: 12px;
+}
+.rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0;
+}
+.rule-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: right;
+  width: 100%;
+  background: #fbfafc;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  font-family: inherit;
+}
+.rule-row:hover {
+  border-color: #d8cde8;
+}
+.rule-row.done {
+  background: #f2f8f3;
+  border-color: #d5e6da;
+}
+.rule-row.auto {
+  cursor: default;
+}
+.rule-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 1.6px solid #cfc8da;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  transition: all 0.15s;
+}
+.rule-row.done .rule-checkbox {
+  background: var(--green);
+  border-color: var(--green);
+}
+.rule-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.rule-text strong {
+  font-size: 11px;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.9;
+}
+.rule-text small {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.rule-auto-pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.program-14day {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 6px;
+  margin: 16px 0 6px;
+}
+.day-cell {
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: #fff;
+  color: #b7b0c4;
+}
+.day-cell.low {
+  background: #faf6ee;
+  border-color: #eadfc6;
+  color: #a08a5a;
+}
+.day-cell.half {
+  background: #f3eef9;
+  border-color: #e2d7ee;
+  color: #7a6a92;
+}
+.day-cell.full {
+  background: #75a28b;
+  border-color: #75a28b;
+  color: #fff;
+}
+.day-cell.today {
+  outline: 2px solid var(--purple);
+  outline-offset: 1px;
+}
+.day-cell-percent {
+  display: flex;
+  align-items: center;
+  font-size: 8px;
+  font-weight: 700;
+}
+.day-cell-weekday {
+  font-size: 8px;
+}
+.delta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+.delta-card {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #fbfafc;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+.delta-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--purple-soft);
+  color: var(--purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.delta-label {
+  font-size: 8.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.delta-card strong {
+  font-size: 13px;
+  color: var(--ink);
+  display: block;
+  margin: 2px 0;
+}
+.delta-change {
+  font-size: 8.5px;
+  color: #a89bb8;
+  line-height: 1.7;
+  display: block;
+}
+.delta-change.better {
+  color: #4e8a63;
+  font-weight: 700;
+}
+.delta-change.worse {
+  color: #b0443c;
+  font-weight: 700;
+}
+.review-questions {
+  margin: 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 2.1;
+  font-size: 10.5px;
+  color: #5d5470;
+}
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.program-sources {
+  grid-template-columns: repeat(auto-fill, minmax(225px, 1fr));
+}
+@media (max-width: 900px) {
+  .delta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .program-14day {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}

@@ -1,0 +1,1609 @@
+/* روبه‌راه — همهٔ @mediaهای ریسپانسیو و prefers-reduced-motion
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+/* Responsive, always right-to-left */
+
+@media (min-width: 1600px) {
+  :root {
+    --sidebar-width: 260px;
+  }
+  .main-content {
+    padding: 30px 42px 0;
+  }
+  .topbar {
+    padding: 0 42px;
+  }
+  .journey-hero {
+    min-height: 235px;
+    padding: 29px 34px;
+  }
+  .hero-copy h2 {
+    font-size: 30px;
+  }
+  .hero-copy > p {
+    font-size: 12.5px;
+  }
+  .hero-actions {
+    margin-top: 21px;
+  }
+  .hero-art {
+    width: 44%;
+  }
+  .stats-grid {
+    margin: 21px 0 23px;
+    gap: 19px;
+  }
+  .stat-card {
+    padding: 17px 21px;
+  }
+  .dashboard-primary {
+    gap: 23px;
+  }
+  .panel {
+    padding: 23px 25px;
+  }
+  .daily-task {
+    min-height: 70px;
+  }
+  .section-heading h2 {
+    font-size: 15.5px;
+  }
+  .task-content h3 {
+    font-size: 12.5px;
+  }
+  .mood-option svg {
+    width: 39px;
+    height: 39px;
+  }
+  .checkin-form {
+    gap: 15px;
+  }
+  .phase-preview {
+    padding: 17px 20px;
+  }
+}
+@media (max-width: 1250px) {
+  :root {
+    --sidebar-width: 220px;
+  }
+  .brand {
+    padding-inline: 22px;
+  }
+  .brand strong {
+    font-size: 26px;
+  }
+  .brand small {
+    font-size: 8.4px;
+  }
+  .brand-mark {
+    width: 36px;
+    height: 39px;
+  }
+  .main-nav {
+    padding: 0 12px;
+  }
+  .nav-item {
+    gap: 10px;
+    font-size: 11.4px;
+  }
+  .sidebar-message {
+    margin-inline: 17px;
+  }
+  .topbar {
+    padding-inline: 26px;
+  }
+  .main-content {
+    padding-inline: 26px;
+  }
+  .topbar-tools {
+    gap: 14px;
+  }
+  .global-search {
+    width: 200px;
+  }
+  .hero-copy h2 {
+    font-size: 24px;
+  }
+  .hero-copy > p {
+    font-size: 11px;
+  }
+  .hero-actions {
+    gap: 12px;
+  }
+  .hero-day {
+    font-size: 8.7px;
+  }
+  .stats-grid {
+    gap: 12px;
+  }
+  .stat-card {
+    padding: 12px 14px;
+  }
+  .stat-top > span:first-child {
+    font-size: 9px;
+  }
+  .stat-tag {
+    font-size: 8px;
+  }
+  .panel {
+    padding: 19px;
+  }
+  .section-heading h2 {
+    font-size: 13.5px;
+  }
+  .dashboard-primary {
+    gap: 17px;
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .task-content h3 {
+    font-size: 10.6px;
+  }
+  .mood-option {
+    padding: 5px 2px;
+  }
+  .mood-option svg {
+    width: 31px;
+    height: 31px;
+  }
+  .mood-option > span {
+    font-size: 7.8px;
+  }
+  .phase-preview-grid {
+    gap: 11px;
+  }
+  .phase-preview {
+    padding: 13px 12px;
+  }
+  .phase-preview h3 {
+    font-size: 11.5px;
+  }
+  .phase-preview-top > small {
+    font-size: 6.7px;
+  }
+  .phase-preview-bottom p {
+    font-size: 8.5px;
+  }
+  .tiny-label {
+    font-size: 7px;
+  }
+  .job-path .pill {
+    font-size: 7px;
+    padding: 3px 5px;
+  }
+  .job-path > p {
+    min-height: 95px;
+  }
+  .project-grid,
+  .source-grid,
+  .path-grid {
+    gap: 14px;
+  }
+  .phase-tab {
+    padding: 15px 12px;
+    gap: 9px;
+  }
+  .phase-tab h3 {
+    font-size: 11px;
+  }
+  .phase-tab .eyebrow {
+    font-size: 8px;
+  }
+  .phase-tab p {
+    font-size: 8.3px;
+  }
+  .finance-stats {
+    gap: 12px;
+  }
+  .finance-stat {
+    padding: 18px 13px;
+  }
+  .finance-stat > span:not(.icon-box) {
+    font-size: 8.2px;
+  }
+  .health-grid {
+    gap: 15px;
+  }
+  .health-small-stats {
+    gap: 11px;
+    padding: 15px;
+  }
+  .health-small-stats > div {
+    gap: 8px;
+  }
+  .health-small-stats > div + div {
+    padding-inline-start: 11px;
+  }
+  .health-small-stats small {
+    font-size: 6.8px;
+  }
+  .health-small-stats .icon-box {
+    width: 30px;
+    height: 30px;
+  }
+  .health-small-stats .icon-box svg {
+    width: 16px;
+  }
+}
+@media (max-width: 1080px) {
+  .topbar-date {
+    display: none;
+  }
+  .hero-copy h2 {
+    font-size: 22px;
+  }
+  .hero-copy {
+    width: 66%;
+  }
+  .hero-day {
+    display: none;
+  }
+  .stat-top > span:first-child {
+    font-size: 8.5px;
+  }
+  .stat-top .icon-box {
+    width: 28px;
+    height: 28px;
+  }
+  .stat-bottom {
+    gap: 4px;
+  }
+  .stat-tag {
+    font-size: 7.1px;
+  }
+  .stat-mini-progress {
+    width: 30px;
+  }
+  .stat-bottom > svg {
+    width: 12px;
+  }
+  .phase-preview-top > small {
+    display: none;
+  }
+  .phase-preview-top {
+    font-size: 8px;
+  }
+  .phase-preview-bottom p {
+    font-size: 7.9px;
+  }
+  .task-meta {
+    gap: 8px;
+  }
+  .daily-task {
+    gap: 9px;
+    min-height: 69px;
+  }
+  .task-content h3 {
+    font-size: 10px;
+  }
+  .task-checkbox {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+  }
+  .task-delete {
+    width: 18px;
+  }
+  .mood-option > span {
+    font-size: 7px;
+  }
+  .gentle-note {
+    font-size: 7.2px;
+  }
+  .checkin-form > textarea {
+    font-size: 9px;
+  }
+  .section-heading h2 {
+    font-size: 12.5px;
+  }
+  .text-button {
+    font-size: 9.5px;
+  }
+  .section-heading p {
+    font-size: 9.2px;
+  }
+  .main-heading h1 {
+    font-size: 23px;
+  }
+  .fresh-start {
+    font-size: 8.5px;
+    padding-inline: 8px;
+  }
+  .project-status {
+    font-size: 7px;
+  }
+  .project-card > p {
+    font-size: 9.5px;
+  }
+  .project-card h3 {
+    font-size: 12px;
+  }
+  .job-path .card-top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .health-grid {
+    grid-template-columns: 1fr;
+  }
+  .health-small-stats {
+    justify-content: flex-start;
+  }
+  .health-small-stats small {
+    font-size: 9px;
+  }
+  .health-small-stats > div {
+    gap: 12px;
+  }
+  .health-small-stats .icon-box {
+    width: 36px;
+    height: 36px;
+  }
+  .health-advice-grid {
+    gap: 13px;
+  }
+  .finance-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .finance-stat > span:not(.icon-box) {
+    font-size: 10px;
+  }
+  .phase-tab {
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .phase-tab > div {
+    min-width: 100px;
+  }
+  .phase-tab > svg {
+    display: none;
+  }
+  .milestone {
+    gap: 12px;
+  }
+  .milestone > .button {
+    font-size: 9px;
+    padding-inline: 8px;
+  }
+}
+@media (max-width: 900px) {
+  :root {
+    --sidebar-width: 244px;
+  }
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: -10px 0 50px #37224622;
+  }
+  .app-main {
+    margin-inline-start: 0;
+  }
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    border: 0;
+    background: #33213f44;
+    backdrop-filter: blur(2px);
+    z-index: 35;
+  }
+  .mobile-toggle {
+    display: flex;
+    width: 25px;
+    height: 30px;
+    margin-inline-end: 0;
+    color: #aa8fbd;
+  }
+  .mobile-close {
+    display: flex;
+    position: absolute;
+    top: 12px;
+    inset-inline-end: 9px;
+    width: 24px;
+    height: 24px;
+    color: #b2a0c0;
+  }
+  .topbar {
+    height: 69px;
+    padding-inline: 24px;
+  }
+  .global-search {
+    width: 215px;
+  }
+  .topbar-tools {
+    gap: 16px;
+  }
+  .main-content {
+    padding: 24px;
+  }
+  .hero-copy h2 {
+    font-size: 25px;
+  }
+  .hero-copy > p {
+    font-size: 11.5px;
+  }
+  .hero-day {
+    display: flex;
+  }
+  .hero-copy {
+    width: 63%;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .stat-top > span:first-child {
+    font-size: 9px;
+  }
+  .stat-tag {
+    font-size: 8px;
+  }
+  .dashboard-primary {
+    grid-template-columns: 1.4fr 1fr;
+  }
+  .section-heading h2 {
+    font-size: 14px;
+  }
+  .section-heading p {
+    font-size: 10px;
+  }
+  .task-content h3 {
+    font-size: 11px;
+  }
+  .daily-task {
+    min-height: 67px;
+  }
+  .task-delete {
+    opacity: 0.45;
+  }
+  .mood-option svg {
+    width: 34px;
+    height: 34px;
+  }
+  .mood-option > span {
+    font-size: 8px;
+  }
+  .gentle-note {
+    font-size: 8px;
+  }
+  .phase-preview-top > small {
+    display: none;
+  }
+  .phase-preview h3 {
+    font-size: 11.5px;
+  }
+  .phase-preview-bottom p {
+    font-size: 8.4px;
+  }
+  .phase-tab {
+    flex-wrap: nowrap;
+  }
+  .phase-tab > div {
+    min-width: 0;
+  }
+  .milestone > .button {
+    font-size: 10px;
+  }
+  .health-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .health-small-stats small {
+    font-size: 7px;
+  }
+  .health-small-stats > div {
+    gap: 8px;
+  }
+  .health-small-stats .icon-box {
+    width: 29px;
+    height: 29px;
+  }
+  .project-card h3 {
+    font-size: 13px;
+  }
+  .project-card > p {
+    font-size: 10px;
+  }
+  .brand {
+    padding-inline: 26px;
+  }
+  .brand strong {
+    font-size: 29px;
+  }
+  .brand small {
+    font-size: 9px;
+  }
+  .main-nav {
+    padding: 0 16px;
+  }
+  .nav-item {
+    font-size: 12px;
+  }
+  .sidebar-message {
+    margin-inline: 21px;
+  }
+}
+@media (max-width: 700px) {
+  .global-search {
+    width: 190px;
+  }
+  .topbar-tools {
+    gap: 12px;
+  }
+  .breadcrumbs {
+    gap: 8px;
+  }
+  .breadcrumbs > span {
+    display: none;
+  }
+  .breadcrumbs > svg:first-of-type {
+    display: none;
+  }
+  .topbar-divider {
+    display: none;
+  }
+  .fresh-start {
+    font-size: 8px;
+  }
+  .main-heading h1 {
+    font-size: 22px;
+  }
+  .hero-copy h2 {
+    font-size: 23px;
+  }
+  .hero-copy > p {
+    font-size: 11px;
+  }
+  .hero-copy {
+    width: 65%;
+  }
+  .hero-day {
+    display: none;
+  }
+  .journey-hero {
+    padding: 23px;
+    min-height: 218px;
+  }
+  .hero-art {
+    width: 45%;
+    inset-inline-end: -7px;
+  }
+  .hero-art-caption {
+    inset-inline-end: 15px;
+    font-size: 8px;
+    padding: 4px 7px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px;
+  }
+  .stat-card {
+    padding: 14px 17px;
+  }
+  .stat-top > span:first-child {
+    font-size: 10.5px;
+  }
+  .stat-top .icon-box {
+    width: 32px;
+    height: 32px;
+  }
+  .stat-tag {
+    font-size: 8.7px;
+  }
+  .stat-mini-progress {
+    width: 60px;
+  }
+  .stat-value {
+    font-size: 25px;
+  }
+  .dashboard-primary {
+    grid-template-columns: 1fr;
+  }
+  .daily-task {
+    min-height: 67px;
+  }
+  .task-content h3 {
+    font-size: 12px;
+  }
+  .task-checkbox {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+  }
+  .task-meta {
+    gap: 12px;
+  }
+  .category-tag {
+    font-size: 8px;
+  }
+  .task-meta > span:not(.category-tag) {
+    font-size: 9px;
+  }
+  .checkin-panel .mood-option {
+    padding: 9px 5px;
+  }
+  .checkin-panel .mood-option svg {
+    width: 39px;
+    height: 39px;
+  }
+  .mood-option > span {
+    font-size: 9px;
+  }
+  .checkin-form > textarea {
+    font-size: 10px;
+    min-height: 64px;
+  }
+  .checkin-panel .checkin-submit {
+    min-height: 36px;
+  }
+  .gentle-note {
+    font-size: 8.5px;
+  }
+  .checkin-form {
+    gap: 13px;
+  }
+  .phase-preview-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .phase-preview {
+    padding: 14px 17px;
+  }
+  .phase-preview-top > small {
+    display: flex;
+    font-size: 8px;
+  }
+  .phase-preview-top {
+    font-size: 9px;
+  }
+  .phase-preview h3 {
+    font-size: 13px;
+    margin-top: 9px;
+  }
+  .phase-preview-bottom p {
+    font-size: 10px;
+  }
+  .phase-step {
+    width: 30px;
+    height: 30px;
+  }
+  .phase-preview-grid .phase-preview:not(.current) .phase-preview-bottom {
+    margin-top: 4px;
+  }
+  .project-grid,
+  .source-grid,
+  .notes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .project-card:last-child:nth-child(odd) {
+    grid-column: 1/-1;
+  }
+  .project-card.compact h3 {
+    font-size: 13px;
+  }
+  .project-card.compact > p {
+    font-size: 10px;
+  }
+  .path-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .job-path > p {
+    min-height: 0;
+    font-size: 11px;
+  }
+  .job-path .card-top {
+    flex-wrap: nowrap;
+  }
+  .job-path .pill {
+    font-size: 9px;
+  }
+  .job-path h3 {
+    margin-top: 13px;
+  }
+  .roadmap-tabs {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .phase-tab {
+    padding: 15px 17px;
+  }
+  .phase-tab h3 {
+    font-size: 13px;
+  }
+  .phase-tab p {
+    font-size: 10px;
+  }
+  .phase-tab .eyebrow {
+    font-size: 9px;
+  }
+  .phase-tab > svg {
+    display: block;
+  }
+  .phase-tab > div {
+    flex: 1;
+  }
+  .info-banner {
+    padding: 17px;
+    gap: 12px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .info-banner > div {
+    flex: 1;
+    min-width: 160px;
+  }
+  .info-banner h3 {
+    font-size: 12.5px;
+  }
+  .info-banner p {
+    font-size: 10px;
+  }
+  .info-banner > .pill {
+    font-size: 8px;
+    align-self: flex-start;
+  }
+  .info-banner > .button {
+    margin-inline-start: 49px;
+  }
+  .info-banner > .icon-box,
+  .info-banner-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 9px;
+  }
+  .milestone {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px 0;
+  }
+  .milestone > div {
+    flex-basis: calc(100% - 42px);
+  }
+  .milestone > .button {
+    margin-inline-start: 40px;
+    margin-top: 2px;
+  }
+  .milestone h3 {
+    font-size: 12px;
+  }
+  .milestone p {
+    font-size: 10.5px;
+  }
+  .health-grid {
+    grid-template-columns: 1fr;
+  }
+  .health-advice-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .health-advice-grid .panel {
+    position: relative;
+    padding-inline-start: 70px;
+  }
+  .health-advice-grid .icon-box {
+    position: absolute;
+    inset-inline-start: 19px;
+    top: 21px;
+  }
+  .health-advice-grid h3 {
+    margin-top: 0;
+    font-size: 12px;
+  }
+  .health-advice-grid p {
+    font-size: 10.5px;
+  }
+  .health-small-stats {
+    padding: 17px;
+  }
+  .health-small-stats small {
+    font-size: 9px;
+  }
+  .health-small-stats .icon-box {
+    width: 36px;
+    height: 36px;
+  }
+  .resource-strip {
+    flex-wrap: wrap;
+    gap: 14px 22px;
+  }
+  .resource-strip > div {
+    width: 100%;
+    font-size: 10px;
+  }
+  .resource-strip > a {
+    font-size: 10px;
+  }
+  .savings-panel {
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .savings-panel > .icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+  .savings-panel .section-heading {
+    display: block;
+  }
+  .savings-panel .section-heading .text-button {
+    margin-top: 5px;
+    font-size: 9px;
+  }
+  .project-card > .eyebrow {
+    font-size: 9px;
+  }
+  .source-card h3 {
+    font-size: 12px;
+  }
+  .source-card p {
+    font-size: 10px;
+  }
+  .view-stack {
+    gap: 16px;
+  }
+  .topbar-date {
+    display: none;
+  }
+  .local-search {
+    width: 260px;
+  }
+  .notes-toolbar .button {
+    font-size: 10px;
+  }
+}
+@media (max-width: 480px) {
+  .topbar {
+    height: 63px;
+    padding-inline: 15px;
+    gap: 10px;
+  }
+  .breadcrumbs {
+    gap: 6px;
+  }
+  .breadcrumbs strong {
+    font-size: 9px;
+    max-width: 84px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .breadcrumbs > svg {
+    width: 11px;
+  }
+  .breadcrumbs .mobile-toggle svg {
+    width: 21px;
+  }
+  .topbar-tools {
+    gap: 9px;
+  }
+  .global-search {
+    width: 154px;
+    height: 32px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .global-search input {
+    font-size: 9px;
+  }
+  .global-search > svg {
+    width: 14px;
+  }
+  .global-search kbd {
+    display: none;
+  }
+  .notification-button {
+    width: 26px;
+  }
+  .notification-button > svg {
+    width: 18px;
+  }
+  .notification-dot {
+    inset-inline-start: 5px;
+  }
+  .search-popover {
+    min-width: 280px;
+    inset-inline-start: auto;
+    inset-inline-end: -40px;
+  }
+  .notification-popover {
+    min-width: 290px;
+  }
+  .main-content {
+    padding: 21px 15px 0;
+  }
+  .main-heading {
+    margin-bottom: 19px;
+    gap: 10px;
+    min-height: 61px;
+    align-items: flex-start;
+  }
+  .main-heading h1 {
+    font-size: 20px;
+    line-height: 1.9;
+    letter-spacing: -0.6px;
+  }
+  .wave {
+    font-size: 19px;
+    margin-inline-start: 2px;
+  }
+  .main-heading p {
+    font-size: 10px;
+    line-height: 2.1;
+    margin-top: 4px;
+    max-width: 300px;
+  }
+  .main-heading > .button {
+    font-size: 8px;
+    padding: 6px 8px;
+    min-height: 29px;
+    margin-top: 5px;
+    gap: 4px;
+  }
+  .main-heading > .button > svg {
+    width: 12px;
+  }
+  .fresh-start {
+    display: none;
+  }
+  .journey-hero {
+    min-height: 233px;
+    padding: 23px 21px;
+  }
+  .hero-copy {
+    width: 87%;
+  }
+  .hero-eyebrow {
+    font-size: 9px;
+    gap: 6px;
+  }
+  .hero-eyebrow > svg {
+    width: 13px;
+  }
+  .hero-copy h2 {
+    font-size: 21px;
+    line-height: 1.9;
+    white-space: nowrap;
+    margin-top: 9px;
+    letter-spacing: -0.7px;
+  }
+  .hero-copy > p {
+    font-size: 10px;
+    line-height: 2.2;
+    max-width: 240px;
+    margin-top: 5px;
+  }
+  .desktop-break {
+    display: none;
+  }
+  .hero-actions {
+    margin-top: 18px;
+  }
+  .hero-actions .button {
+    font-size: 9.5px;
+    min-height: 34px;
+    padding: 6px 12px;
+    gap: 9px;
+  }
+  .hero-actions .button > svg {
+    width: 14px;
+  }
+  .hero-art {
+    width: 62%;
+    height: 79%;
+    inset-inline-end: -32px;
+    bottom: -6px;
+    opacity: 0.55;
+    z-index: -1;
+  }
+  .hero-art-caption {
+    display: none;
+  }
+  .stats-grid {
+    margin: 15px 0 17px;
+    gap: 11px;
+  }
+  .stat-card {
+    padding: 12px 14px;
+  }
+  .stat-top > span:first-child {
+    font-size: 9px;
+  }
+  .stat-top .icon-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+  }
+  .stat-top .icon-box svg {
+    width: 16px;
+  }
+  .stat-value {
+    font-size: 24px;
+  }
+  .stat-value small {
+    font-size: 9px;
+  }
+  .stat-tag {
+    font-size: 7.7px;
+  }
+  .stat-bottom {
+    margin-top: 7px;
+  }
+  .stat-mini-progress {
+    width: 36px;
+  }
+  .panel {
+    padding: 18px 17px;
+    border-radius: 12px;
+  }
+  .section-heading h2 {
+    font-size: 13px;
+    gap: 5px;
+  }
+  .section-heading p {
+    font-size: 9px;
+    line-height: 2;
+  }
+  .section-heading > .text-button {
+    font-size: 8.6px;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .section-heading > .text-button > svg {
+    width: 12px;
+  }
+  .heading-icon svg {
+    width: 17px;
+  }
+  .daily-task {
+    gap: 10px;
+    min-height: 70px;
+  }
+  .task-content h3 {
+    font-size: 11px;
+  }
+  .task-delete {
+    width: 20px;
+    opacity: 0.6;
+  }
+  .task-meta {
+    gap: 10px;
+  }
+  .category-tag {
+    font-size: 7.6px;
+  }
+  .task-meta > span:not(.category-tag) {
+    font-size: 8.4px;
+  }
+  .daily-progress > div:first-child {
+    font-size: 8.5px;
+  }
+  .daily-progress p {
+    font-size: 8px;
+  }
+  .dashboard-primary {
+    gap: 16px;
+    margin-bottom: 17px;
+  }
+  .mood-options {
+    gap: 6px;
+  }
+  .checkin-panel .mood-option {
+    padding-inline: 3px;
+  }
+  .checkin-panel .mood-option svg {
+    width: 37px;
+    height: 37px;
+  }
+  .mood-option > span {
+    font-size: 8px;
+  }
+  .gentle-note {
+    font-size: 8px;
+  }
+  .tiny-label {
+    display: none;
+  }
+  .roadmap-preview {
+    margin-bottom: 21px;
+  }
+  .roadmap-preview .section-heading {
+    gap: 8px;
+  }
+  .roadmap-preview .section-heading h2 {
+    font-size: 12px;
+  }
+  .phase-preview {
+    padding: 14px;
+  }
+  .project-grid,
+  .source-grid,
+  .notes-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+  .project-card:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+  .project-card.compact .card-top {
+    margin-bottom: 10px;
+  }
+  .project-card.compact .project-progress-label {
+    margin-top: 14px;
+  }
+  .project-card.compact > p {
+    min-height: 0;
+  }
+  .project-card .project-status {
+    font-size: 8px;
+  }
+  .project-card h3 {
+    font-size: 14px;
+  }
+  .project-card > p {
+    min-height: 0;
+    font-size: 10.5px;
+  }
+  .project-card > .eyebrow {
+    font-size: 10px;
+  }
+  .project-card.compact {
+    padding: 18px;
+  }
+  .page-footer {
+    font-size: 8px;
+    line-height: 2;
+    margin-top: 24px;
+    padding-bottom: 21px;
+    gap: 6px;
+  }
+  .footer-brand {
+    display: none;
+  }
+  .info-banner {
+    padding: 15px;
+    gap: 10px;
+  }
+  .info-banner h3 {
+    font-size: 11.5px;
+  }
+  .info-banner p {
+    font-size: 9.5px;
+  }
+  .info-banner > .pill {
+    margin-inline-start: 45px;
+  }
+  .section-heading > .button {
+    font-size: 8px;
+    gap: 5px;
+    min-height: 29px;
+    padding: 5px 8px;
+  }
+  .section-heading > .button svg {
+    width: 12px;
+  }
+  .filter-tabs > button {
+    font-size: 9px;
+    padding-inline: 10px;
+  }
+  .empty-state {
+    padding: 35px 12px;
+  }
+  .empty-state h3 {
+    font-size: 12px;
+  }
+  .empty-state p {
+    font-size: 10px;
+  }
+  .finance-stats {
+    gap: 11px;
+  }
+  .finance-stat > span:not(.icon-box) {
+    font-size: 8.4px;
+    padding-top: 5px;
+  }
+  .finance-stat > .icon-box {
+    width: 27px;
+    height: 27px;
+    inset-inline-end: 12px;
+    top: 14px;
+  }
+  .finance-stat > strong {
+    font-size: 20px;
+    margin-top: 22px;
+  }
+  .money small {
+    font-size: 8px;
+  }
+  .savings-panel {
+    gap: 11px;
+  }
+  .savings-panel > .icon-box {
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+  }
+  .savings-panel > .icon-box svg {
+    width: 19px;
+  }
+  .savings-panel .section-heading h2 {
+    font-size: 11.5px;
+  }
+  .savings-panel .section-heading p {
+    font-size: 9px;
+  }
+  .savings-content .project-progress-label .money {
+    font-size: 8.5px;
+  }
+  .savings-content .project-progress-label .money small {
+    font-size: 7px;
+  }
+  .notes-toolbar {
+    gap: 10px;
+  }
+  .notes-toolbar > .button {
+    font-size: 9px;
+    min-height: 36px;
+    padding: 7px 11px;
+    gap: 5px;
+  }
+  .local-search {
+    flex: 1;
+    width: auto;
+    height: 36px;
+    padding: 0 9px;
+  }
+  .local-search > input {
+    font-size: 9px;
+  }
+  .local-search > svg {
+    width: 15px;
+  }
+  .notice {
+    padding: 15px;
+    gap: 9px;
+  }
+  .notice p {
+    font-size: 9.6px;
+  }
+  .notice strong {
+    font-size: 10px;
+  }
+  .notice > svg {
+    width: 17px;
+  }
+  .portfolio-guide {
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .portfolio-guide > .icon-box {
+    width: 32px;
+    height: 32px;
+  }
+  .portfolio-guide h3 {
+    font-size: 12px;
+  }
+  .portfolio-guide p {
+    font-size: 10px;
+  }
+  .portfolio-chips {
+    gap: 10px;
+    font-size: 8px;
+  }
+  .portfolio-chips > span {
+    font-size: 8px;
+  }
+  .health-small-stats {
+    gap: 12px;
+  }
+  .health-small-stats small {
+    font-size: 7px;
+  }
+  .health-small-stats strong {
+    font-size: 18px;
+  }
+  .health-small-stats > div {
+    gap: 8px;
+  }
+  .health-small-stats > div + div {
+    padding-inline-start: 12px;
+  }
+  .health-small-stats .icon-box {
+    width: 30px;
+    height: 30px;
+  }
+  .medical-note {
+    padding: 15px;
+    gap: 10px;
+  }
+  .medical-note strong {
+    font-size: 10px;
+  }
+  .medical-note p {
+    font-size: 9.5px;
+  }
+  .medical-note > svg {
+    width: 16px;
+  }
+  .page-footnote {
+    font-size: 9px;
+  }
+  .modal-overlay {
+    padding: 15px;
+  }
+  .modal {
+    padding: 21px 19px;
+    border-radius: 15px;
+    max-height: 91dvh;
+  }
+  .modal-heading {
+    margin-bottom: 21px;
+  }
+  .modal-heading h2 {
+    font-size: 16px;
+  }
+  .modal-heading p {
+    font-size: 10px;
+  }
+  .modal-form {
+    gap: 17px;
+  }
+  .modal-form label,
+  .form-grid label {
+    font-size: 10px;
+  }
+  .modal-form input,
+  .modal-form textarea,
+  .modal-form select,
+  .form-grid input {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+  .form-grid {
+    gap: 11px;
+  }
+  .modal-actions > .button {
+    min-width: 96px;
+    font-size: 10px;
+  }
+  .backup-row {
+    padding: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .backup-row p {
+    font-size: 8.5px;
+  }
+  .toast-region {
+    inset-inline-end: 15px;
+    bottom: 15px;
+    max-width: calc(100vw - 30px);
+  }
+  .toast {
+    padding: 12px 14px;
+    gap: 9px;
+  }
+  .toast > span {
+    font-size: 10px;
+  }
+  .toast > svg {
+    width: 18px;
+  }
+  .toast > button {
+    margin-inline-start: 0;
+  }
+  .link-form > div {
+    flex-wrap: wrap;
+  }
+  .link-form input {
+    min-width: 190px;
+  }
+  .project-step {
+    font-size: 10.5px;
+    gap: 10px;
+  }
+  .guide-intro p {
+    font-size: 10.7px;
+    line-height: 2.4;
+  }
+  .expanded .mood-option {
+    padding: 9px 3px;
+  }
+  .expanded .mood-option svg {
+    width: 37px;
+    height: 37px;
+  }
+  .expanded .mood-option > span {
+    font-size: 8px;
+  }
+  .habit-check {
+    font-size: 10px !important;
+  }
+  .mood-chart {
+    gap: 18px;
+  }
+}
+@media (max-height: 800px) and (min-width: 901px) {
+  .sidebar-message {
+    padding-top: 6px;
+    padding-bottom: 10px;
+  }
+  .mini-journey {
+    height: 35px;
+  }
+  .sidebar-message p {
+    font-size: 9px;
+  }
+  .sidebar-bottom {
+    padding-top: 15px;
+  }
+  .sidebar-secondary {
+    padding-bottom: 9px;
+  }
+  .profile {
+    padding-top: 13px;
+    padding-bottom: 14px;
+  }
+  .brand {
+    padding-top: 24px;
+    padding-bottom: 19px;
+  }
+  .nav-item {
+    height: 40px;
+    margin: 3px 0;
+  }
+}
+@media (max-width: 1080px) {
+  .commitment-panel {
+    grid-template-columns: 1fr;
+    gap: 19px;
+  }
+  .commitment-side {
+    flex-direction: row;
+    border-inline-start: 0;
+    border-top: 1px solid #f0e8f6;
+    padding-inline-start: 0;
+    padding-top: 16px;
+  }
+  .commitment-side > div {
+    flex: 1;
+  }
+  .progress-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .badge-grid {
+    gap: 10px;
+  }
+  .progress-chart {
+    height: 200px;
+  }
+  .chart-bar-wrap {
+    height: 120px;
+  }
+}
+@media (max-width: 700px) {
+  .commitment-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 17px;
+  }
+  .streak-ring {
+    width: 100px;
+    height: 100px;
+  }
+  .streak-center strong {
+    font-size: 27px;
+  }
+  .streak-center span {
+    font-size: 8.5px;
+  }
+  .commitment-side {
+    flex-direction: column;
+    gap: 13px;
+  }
+  .commitment-side > div {
+    width: 100%;
+  }
+  .progress-chart {
+    height: 186px;
+    gap: 5px;
+  }
+  .chart-bar-wrap {
+    height: 106px;
+    max-width: 28px;
+  }
+  .chart-column {
+    max-width: 54px;
+  }
+  .badge-grid {
+    grid-template-columns: 1fr;
+  }
+  .schedule-guide {
+    flex-direction: column;
+    gap: 13px;
+    align-items: flex-start;
+  }
+  .progress-stat strong {
+    font-size: 22px;
+  }
+  .chart-legend {
+    font-size: 8px;
+  }
+}
+@media (max-width: 480px) {
+  .next-action {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 11px;
+  }
+  .next-action .button {
+    width: 100%;
+  }
+  .time-block {
+    padding: 11px 12px 4px;
+  }
+  .block-hint {
+    display: none;
+  }
+  .chart-bar-value {
+    font-size: 7.5px;
+  }
+  .progress-chart {
+    gap: 4px;
+  }
+  .chart-column {
+    max-width: 48px;
+  }
+  .commitment-copy h2 {
+    font-size: 14px;
+  }
+  .commitment-copy > p {
+    font-size: 10px;
+  }
+  .target-stepper {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .commitment-actions {
+    width: 100%;
+  }
+  .commitment-actions .button {
+    flex: 1;
+  }
+  .progress-stats {
+    gap: 11px;
+  }
+  .progress-stat {
+    padding: 16px 11px;
+  }
+  .badge {
+    padding: 13px 14px;
+    gap: 11px;
+  }
+  .badge-icon {
+    width: 33px;
+    height: 33px;
+  }
+  .badge h3 {
+    font-size: 11px;
+  }
+  .badge p {
+    font-size: 9px;
+  }
+  .block-chips > span {
+    padding: 7px 10px;
+  }
+  .time-chip {
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

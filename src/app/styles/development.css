@@ -1,0 +1,713 @@
+/* روبه‌راه — چالش ۷۵ روزه: تب‌ها، پلن‌کارت، جمع‌بندی روزها، برنامهٔ ساعتی (پلننر)
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+.dev-tabs {
+  display: flex;
+  gap: 6px;
+  background: #f4f0f8;
+  padding: 6px;
+  border-radius: 12px;
+  width: max-content;
+  max-width: 100%;
+}
+.dev-tab {
+  border: 0;
+  background: transparent;
+  padding: 9px 20px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #766b83;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.6;
+}
+.dev-tab.active {
+  background: #fff;
+  color: #6d4b96;
+  box-shadow: 0 2px 5px #2e25431a;
+}
+.lock-banner {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #f6f1fb;
+  border: 1px solid #e4d8f0;
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: #6d4b96;
+}
+.lock-banner strong {
+  font-size: 11.5px;
+  display: block;
+}
+.lock-banner p {
+  font-size: 10px;
+  color: #857693;
+  line-height: 1.9;
+  margin-top: 3px;
+}
+.lock-banner svg {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.plan-card {
+  border: 1px solid #e3d5f2;
+  background: linear-gradient(160deg, #fdfbff 0%, #f9f5fe 100%);
+}
+.plan-card-head {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.plan-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: #efe7f8;
+  color: #8c68bb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.plan-card-copy {
+  flex: 1;
+  min-width: 220px;
+}
+.plan-card-copy h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4d3670;
+  margin-top: 2px;
+  line-height: 1.8;
+}
+.plan-focus {
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: #6d4b96;
+  background: #efe7f8;
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  line-height: 1.8;
+}
+.plan-body {
+  white-space: pre-line;
+  font-size: 10.5px;
+  line-height: 2.2;
+  color: #3f3454;
+  background: #fff;
+  border: 1px dashed #e0d4ee;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+.review-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+.review-stat {
+  background: #faf8fd;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 13px 10px;
+  text-align: center;
+}
+.review-stat strong {
+  display: block;
+  font-size: 19px;
+  color: #5d4391;
+  line-height: 1.4;
+}
+.review-stat span {
+  font-size: 8.5px;
+  color: var(--muted);
+  line-height: 1.9;
+  display: block;
+  margin-top: 4px;
+}
+.review-trend {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 16px;
+}
+.trend-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+}
+.trend-label {
+  font-size: 9.5px;
+  color: var(--muted);
+}
+.trend-bar {
+  height: 8px;
+  background: #efeaf5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.trend-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: #ac8acf;
+}
+.trend-bar.is-full > span {
+  background: #7ca58c;
+}
+.trend-bar.is-mid > span {
+  background: #ac8acf;
+}
+.trend-bar.is-low > span {
+  background: #cf9c9c;
+}
+.trend-percent {
+  font-size: 9.5px;
+  color: #4d4158;
+  text-align: left;
+  direction: ltr;
+}
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.review-row {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 15px 17px;
+  background: #fff;
+}
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.review-date {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #443553;
+}
+.review-sub {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.review-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.review-bar {
+  height: 6px;
+  background: #f0edf4;
+  border-radius: 20px;
+  overflow: hidden;
+  margin: 12px 0 10px;
+  width: 100%;
+}
+.review-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #b793d8, #8c68bb);
+}
+.review-summary {
+  font-size: 10.5px;
+  line-height: 2.15;
+  color: #55496b;
+}
+.review-missed {
+  font-size: 9px;
+  color: #a2585f;
+  background: #fdf1ef;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-top: 9px;
+  line-height: 1.9;
+}
+.review-gratitude {
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 2;
+  border-inline-start: 3px solid #e3d5f2;
+  padding-inline-start: 10px;
+}
+.review-plan {
+  margin-top: 11px;
+}
+.review-plan summary {
+  cursor: pointer;
+  font-size: 10px;
+  color: #6d4b96;
+  font-weight: 600;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+.review-plan summary::before {
+  content: "＋";
+  font-size: 11px;
+  color: #b793d8;
+}
+.review-plan[open] summary::before {
+  content: "－";
+}
+.review-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #8d8799;
+  text-align: center;
+  padding: 30px 10px;
+}
+@media (max-width: 1080px) {
+  .review-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .review-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .trend-row {
+    grid-template-columns: 52px 1fr 40px;
+  }
+  .dev-tab {
+    padding: 8px 14px;
+    font-size: 10.5px;
+  }
+}
+
+/* ── برنامه‌ریز روزانه ─────────────────────────────── */
+.planner {
+  border: 1px solid #e3d5f2;
+  background: linear-gradient(165deg, #fdfbff 0%, #faf6fe 100%);
+}
+.planner-head {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.planner-copy {
+  flex: 1;
+  min-width: 230px;
+}
+.planner-copy h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4d3670;
+  margin-top: 2px;
+  line-height: 1.8;
+}
+.planner-head-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.planner-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+.planner-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 220px;
+}
+.planner-progress-track {
+  flex: 1;
+  height: 10px;
+  background: #efe9f6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.planner-progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #b793d8, #8c68bb);
+  transition: width 0.35s ease;
+}
+.planner-progress-label {
+  font-size: 10.5px;
+  color: #55496b;
+  white-space: nowrap;
+}
+.planner-progress-label strong {
+  color: #5d4391;
+  font-size: 12px;
+}
+.planner-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 9px;
+  padding: 30px 12px 26px;
+  color: #8d8799;
+}
+.planner-empty h3 {
+  font-size: 13px;
+  color: #4d4158;
+}
+.planner-empty p {
+  font-size: 10px;
+  line-height: 2;
+  max-width: 420px;
+}
+.planner-empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.planner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  list-style: none;
+  padding: 0;
+}
+.plan-item {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 9px;
+  transition:
+    border-color 0.2s,
+    opacity 0.2s;
+}
+.plan-item.done {
+  opacity: 0.78;
+  background: #fbfdfa;
+}
+.plan-item.dragging {
+  border-color: #b793d8;
+  box-shadow: 0 6px 18px rgba(140, 104, 187, 0.18);
+}
+.plan-drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: #b9b3c6;
+  cursor: grab;
+  border-radius: 8px;
+  flex-shrink: 0;
+  touch-action: none;
+}
+.plan-drag:active {
+  cursor: grabbing;
+}
+.plan-drag:hover {
+  background: #f4f0f8;
+  color: #8c68bb;
+}
+.plan-drag:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.plan-move-buttons {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+}
+.plan-move-buttons button {
+  width: 24px;
+  height: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  background: #fbfafd;
+  border-radius: 6px;
+  color: #8d8799;
+  cursor: pointer;
+}
+.plan-move-buttons button:active {
+  background: #efe7f8;
+}
+.plan-move-buttons button:disabled {
+  opacity: 0.35;
+}
+.plan-time {
+  width: 86px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fcfbf9;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 0 8px;
+  color: #443553;
+  direction: ltr;
+  text-align: center;
+  flex-shrink: 0;
+}
+.plan-title {
+  flex: 1;
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fcfbf9;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0 11px;
+  color: #38304a;
+}
+.plan-item.done .plan-title {
+  text-decoration: line-through;
+  text-decoration-color: #b9d2bd;
+  color: #7d8a80;
+}
+.plan-kind,
+.plan-swap {
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #f7f5fa;
+  font-family: inherit;
+  font-size: 10.5px;
+  color: #55496b;
+  padding: 0 8px;
+  max-width: 132px;
+}
+.plan-swap {
+  background: #f5f9f6;
+  color: #3f5c4c;
+  max-width: 118px;
+}
+.plan-time:focus-visible,
+.plan-title:focus-visible,
+.plan-kind:focus-visible,
+.plan-swap:focus-visible,
+.plan-note-row textarea:focus-visible {
+  outline: 2px solid #b793d8;
+  outline-offset: 1px;
+  border-color: #b793d8;
+}
+.plan-icon-button {
+  width: 32px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 9px;
+  color: #a49cb3;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.plan-icon-button:hover {
+  background: #f4f0f8;
+  color: #8c68bb;
+}
+.plan-icon-button.has-note {
+  color: #8c68bb;
+  background: #efe7f8;
+  border-color: #e3d5f2;
+}
+.plan-icon-button.danger-hover:hover {
+  background: #fdf1ef;
+  color: #a2585f;
+}
+.plan-done-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1.6px solid #d9d3e4;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+}
+.plan-done-toggle.checked {
+  background: #7ca58c;
+  border-color: #7ca58c;
+}
+.plan-done-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.plan-note-row {
+  flex-basis: 100%;
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  border-top: 1px dashed #e7e1ee;
+  margin-top: 4px;
+  padding-top: 8px;
+  color: #a49cb3;
+}
+.plan-note-row textarea {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fffdf8;
+  font-family: inherit;
+  font-size: 10.5px;
+  line-height: 2;
+  padding: 8px 11px;
+  color: #4d4158;
+  resize: vertical;
+  min-height: 44px;
+}
+.planner-dropped {
+  margin-top: 12px;
+  border: 1px dashed #e0d4ee;
+  border-radius: 11px;
+  padding: 10px 13px;
+  background: #fbfafc;
+}
+.planner-dropped summary {
+  cursor: pointer;
+  font-size: 10px;
+  color: #6d4b96;
+  font-weight: 600;
+  user-select: none;
+}
+.planner-dropped ul {
+  list-style: none;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.planner-dropped li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  color: #8d8799;
+}
+.dropped-title {
+  text-decoration: line-through;
+}
+.planner-hint {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 2;
+  margin-top: 13px;
+  border-top: 1px solid #efeaf4;
+  padding-top: 11px;
+}
+.planner-hint svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.lock-banner.compact {
+  margin-top: 12px;
+  padding: 10px 13px;
+}
+
+/* جمع‌بندی: تغییرات برنامه نسبت به نسخه‌ی مربی */
+.review-deltas {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f8f6fb;
+  border: 1px solid #ece7f3;
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin-top: 9px;
+}
+.review-deltas-head {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #55496b;
+}
+.review-deltas-line {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 2;
+}
+
+/* مالی: گربه‌ها */
+.cats-chip {
+  border-inline-start: 3px solid #efc9b8;
+}
+.cats-chip small {
+  display: block;
+  font-size: 8.5px;
+  color: var(--muted);
+  font-weight: 400;
+  margin-top: 2px;
+}
+.cats-chip svg {
+  vertical-align: -2px;
+  margin-inline-end: 4px;
+}
+.cat-pill {
+  margin-inline-start: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  vertical-align: 1px;
+}
+.cat-pill svg {
+  margin-top: -1px;
+}
+
+@media (max-width: 640px) {
+  .plan-drag {
+    display: none;
+  }
+  .plan-move-buttons {
+    display: flex;
+  }
+  .plan-time {
+    width: 78px;
+  }
+  .plan-kind,
+  .plan-swap {
+    max-width: 110px;
+    font-size: 9.5px;
+  }
+  .planner-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .planner-progress {
+    min-width: 0;
+  }
+}

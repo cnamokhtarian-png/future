@@ -1,0 +1,169 @@
+/* روبه‌راه — مدیریت مالی: جمع‌بندی ماهانه و نمودار ماه‌ها
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+/* Monthly finance overview */
+
+.month-summary-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.month-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #fbfafc;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.month-chip strong {
+  font-size: 11px;
+  color: var(--ink);
+}
+.month-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.month-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 11px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+}
+.month-row.current {
+  background: #faf7fd;
+  border-color: #ece4f5;
+}
+.month-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  color: var(--ink);
+}
+.month-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.month-bar {
+  height: 6px;
+  border-radius: 99px;
+  background: #efecf3;
+  overflow: hidden;
+}
+.month-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  min-width: 2px;
+}
+.month-bar.income span {
+  background: var(--green);
+}
+.month-bar.expense span {
+  background: var(--peach);
+}
+.month-bar.saving span {
+  background: var(--purple);
+}
+.month-figures {
+  display: flex;
+  gap: 13px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.fig-income {
+  color: #4e8a63;
+}
+.fig-expense {
+  color: #b0443c;
+}
+.fig-net.ok {
+  color: #4e8a63;
+  font-weight: 700;
+}
+.fig-net.bad {
+  color: #b0443c;
+  font-weight: 700;
+}
+.month-legend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 11px;
+  font-size: 9px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-inline-end: 5px;
+  vertical-align: middle;
+}
+.legend-dot.income {
+  background: var(--green);
+}
+.legend-dot.expense {
+  background: var(--peach);
+}
+.legend-dot.saving {
+  background: var(--purple);
+}
+.month-legend-note {
+  margin-inline-start: auto;
+}
+.month-net-banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  border-radius: 12px;
+  padding: 12px 15px;
+  line-height: 2;
+}
+.month-net-banner.ok {
+  background: #f1f7f2;
+  border: 1px solid #d9e9de;
+  color: #3d6b4c;
+}
+.month-net-banner.bad {
+  background: #fdf0ef;
+  border: 1px solid #f2d3cf;
+  color: #8f3a32;
+}
+.month-net-banner p {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.month-net-banner span {
+  font-size: 9px;
+  opacity: 0.9;
+}
+@media (max-width: 900px) {
+  .month-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .month-figures {
+    font-size: 9px;
+    gap: 9px;
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+  .month-legend-note {
+    margin-inline-start: 0;
+  }
+}

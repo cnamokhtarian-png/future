@@ -1,0 +1,389 @@
+/* روبه‌راه — مودال، فرم‌ها، toast، انیمیشن‌ها و بازنویسی‌های خوانایی تایپوگرافی
+   این فایل توسط globals.css ایمپورت می‌شود؛ ترتیب @import‌ ها مهم است. */
+
+/* Forms and small interactions */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #332a4266;
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: overlay-in 0.18s ease;
+}
+.modal {
+  background: #fff;
+  width: 100%;
+  max-width: 510px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  border: 1px solid #f1e9f7;
+  border-radius: 18px;
+  padding: 25px 26px;
+  box-shadow: 0 25px 100px #2d1c4433;
+  animation: modal-in 0.25s ease;
+}
+.modal-wide {
+  max-width: 630px;
+}
+.modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 23px;
+}
+.modal-heading h2 {
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.9;
+  color: #8f72a0;
+}
+.modal-heading p {
+  font-size: 10.5px;
+  line-height: 2;
+  color: #b39dc2;
+  margin-top: 5px;
+}
+.modal-heading > .icon-button {
+  margin-top: 2px;
+  width: 29px;
+  height: 29px;
+  color: #b79fc6;
+  background: #faf6fe;
+  flex-shrink: 0;
+}
+.modal-intro {
+  font-size: 11px;
+  color: #ad95bd;
+  line-height: 2.1;
+}
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+}
+.modal-form label,
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  color: #a188b2;
+  line-height: 1.8;
+  min-width: 0;
+}
+.modal-form input,
+.modal-form textarea,
+.modal-form select,
+.link-form input,
+.form-grid input {
+  width: 100%;
+  border: 1px solid #eae1f2;
+  border-radius: 7px;
+  background: #fdfbff;
+  min-height: 40px;
+  font-size: 11px;
+  color: #987ca9;
+  padding: 8px 12px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  min-width: 0;
+}
+.modal-form input::placeholder,
+.modal-form textarea::placeholder,
+.link-form input::placeholder,
+.form-grid input::placeholder {
+  color: #c6b5d2;
+  font-size: 10px;
+}
+.modal-form textarea {
+  resize: vertical;
+  line-height: 2;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.form-grid label > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 17px;
+  border-top: 1px solid #f1e9f7;
+}
+.modal-actions > .button {
+  min-width: 110px;
+}
+.field-help {
+  font-size: 10px;
+  line-height: 2;
+  color: #b7a3c5;
+}
+.form-error {
+  font-size: 10px;
+  line-height: 1.9;
+  color: #bd8792;
+  background: #fff6f7;
+  border-radius: 6px;
+  padding: 7px 9px;
+}
+.transaction-types {
+  display: flex;
+  gap: 10px;
+}
+.transaction-types label {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+}
+.transaction-types label > input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+}
+.transaction-types label > span {
+  padding: 10px;
+  border: 1px solid #eee5f6;
+  border-radius: 8px;
+  background: #fdfbff;
+  color: #b4a0c3;
+  text-align: center;
+}
+.transaction-types input:checked + span {
+  background: #f3eafc;
+  border-color: #ccb1e0;
+  color: #9b76b6;
+}
+.transaction-types input:focus-visible + span {
+  outline: 2px solid #b297c9;
+  outline-offset: 2px;
+}
+.backup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px dashed #e7dbf1;
+  border-radius: 9px;
+  padding: 16px;
+  background: #fdfbff;
+}
+.backup-row strong {
+  font-size: 10.8px;
+  color: #a58ab5;
+  font-weight: 550;
+}
+.backup-row p {
+  font-size: 9px;
+  color: #bba7c9;
+  line-height: 2;
+  margin-top: 4px;
+}
+.toast-region {
+  position: fixed;
+  inset-inline-end: 28px;
+  bottom: 26px;
+  z-index: 150;
+  max-width: calc(100vw - 40px);
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px 17px;
+  background: white;
+  border: 1px solid #e3ece5;
+  border-radius: 11px;
+  box-shadow: 0 8px 30px #37204415;
+  color: #89a48f;
+  animation: enter 0.2s ease;
+  max-width: 460px;
+}
+.toast > span {
+  font-size: 11px;
+  line-height: 2;
+  color: #9a89a5;
+}
+.toast > button {
+  padding: 4px;
+  display: flex;
+  border: 0;
+  background: none;
+  color: #b9a5c7;
+  margin-inline-start: 10px;
+}
+.toast.error {
+  border-color: #f0dce2;
+  color: #c693a1;
+}
+.mobile-toggle,
+.mobile-close {
+  display: none;
+}
+.sidebar-backdrop {
+  display: none;
+}
+.notes-toolbar .button {
+  flex-shrink: 0;
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Quiet surfaces, readable Persian text */
+.hero-art {
+  mix-blend-mode: normal;
+}
+.hero-art img {
+  opacity: 1;
+}
+.hero-copy h2 {
+  font-size: 28px;
+}
+.hero-copy > p {
+  font-size: 12px;
+  color: #9683aa;
+}
+.hero-actions .button {
+  font-size: 11.2px;
+}
+.hero-eyebrow {
+  font-size: 11px;
+  color: #9a79b6;
+}
+.section-heading h2 {
+  font-size: 15px;
+}
+.section-heading p {
+  font-size: 11px;
+  color: #99909f;
+}
+.main-heading p {
+  color: #99909f;
+}
+.nav-item {
+  color: #84798e;
+}
+.stat-top > span:first-child {
+  font-size: 10.8px;
+  color: #91859b;
+}
+.stat-value {
+  font-size: 27px;
+  color: #594c65;
+}
+.stat-tag {
+  font-size: 9px;
+}
+.task-content h3 {
+  font-size: 12.3px;
+  color: #72617e;
+}
+.task-meta > span:not(.category-tag) {
+  font-size: 9px;
+  color: #ad9bbb;
+}
+.category-tag {
+  font-size: 8.3px;
+}
+.mood-option > span {
+  font-size: 9px;
+  color: #a492b1;
+}
+.checkin-form > textarea {
+  font-size: 11px;
+  color: #9681a5;
+}
+.checkin-form > textarea::placeholder {
+  color: #b19cbe;
+}
+.gentle-note {
+  font-size: 9px;
+  color: #b19fbd;
+}
+.phase-preview h3 {
+  font-size: 12.5px;
+  color: #9278a4;
+}
+.phase-preview-bottom p {
+  font-size: 10px;
+  color: #ac98ba;
+}
+.project-card > p,
+.job-path > p,
+.portfolio-guide p,
+.health-advice-grid p,
+.guide-intro p,
+.source-card p,
+.milestone p {
+  color: #94809f;
+}
+.info-banner p {
+  color: #a08aaf;
+}
+.milestone h3,
+.job-path h3,
+.portfolio-guide h3,
+.health-advice-grid h3,
+.guide-intro h2,
+.source-card h3 {
+  color: #8a6d9b;
+}
+.empty-state h3 {
+  color: #9475a5;
+}
+.empty-state p {
+  color: #ae98bd;
+}
+.guide-intro p {
+  line-height: 2.4;
+}
+.notice p {
+  color: #aa92bb;
+}
+.project-card h3 {
+  color: #876697;
+}
+.project-card .eyebrow {
+  color: #b09ac0;
+}
