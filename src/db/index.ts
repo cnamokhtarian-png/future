@@ -7,11 +7,40 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL is required");
 }
 
-// Supabase (and most hosted Postgres providers) require TLS. Local databases
-// such as a developer's own Postgres usually do not.
-const needsSsl =
-  /sslmode=(require|verify-ca|verify-full)/.test(databaseUrl) ||
-  /\.supabase\.(co|com)/.test(databaseUrl);
+// pg merges the connection string OVER the explicit `ssl` pool option, so an
+// `sslmode=require` query param (which parses to `ssl: {}`, i.e. verify the
+// certificate) would silently defeat `rejectUnauthorized: false`. Strip the
+// query params that carry SSL semantics and decide SSL handling here instead.
+function normalizeDatabaseUrl(raw: string): {
+  connectionString: string;
+  needsSsl: boolean;
+} {
+  const supabaseHost = /\.supabase\.(co|com)(:|\/|$)/.test(raw);
+  try {
+    const url = new URL(raw);
+    const sslmode = url.searchParams.get("sslmode");
+    const needsSsl =
+      (sslmode !== null && sslmode !== "disable") || supabaseHost;
+    for (const param of [
+      "sslmode",
+      "sslcert",
+      "sslkey",
+      "sslrootcert",
+      "uselibpqcompat",
+      "sslnegotiation",
+    ]) {
+      url.searchParams.delete(param);
+    }
+    return { connectionString: url.toString(), needsSsl };
+  } catch {
+    return {
+      connectionString: raw,
+      needsSsl: /sslmode=(require|verify-ca|verify-full|no-verify)/.test(raw) || supabaseHost,
+    };
+  }
+}
+
+const { connectionString, needsSsl } = normalizeDatabaseUrl(databaseUrl);
 
 const globalForDb = globalThis as typeof globalThis & {
   __arenaNextJsPostgresqlPool?: Pool;
@@ -20,7 +49,7 @@ const globalForDb = globalThis as typeof globalThis & {
 export const pool =
   globalForDb.__arenaNextJsPostgresqlPool ??
   new Pool({
-    connectionString: databaseUrl,
+    connectionString,
     ssl: needsSsl ? { rejectUnauthorized: false } : undefined,
     // Serverless functions should not fan out into huge pools; the Supabase
     // pooler (port 6543) multiplexes many clients for us.
