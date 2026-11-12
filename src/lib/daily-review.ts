@@ -217,6 +217,10 @@ export async function closeMissingDays(options: { mode?: "cron" | "backfill"; lo
   const lookback = Math.max(1, Math.min(options.lookbackDays ?? 14, 60));
   let aiBudget = Math.max(0, options.aiBudget ?? 3);
   const today = todayKey();
+  // The challenge did not exist before it started: never close days before
+  // settings.startedOn (pre-program 0% rows would be fiction, not data).
+  const [profile] = await db.select({ startedOn: settings.startedOn }).from(settings).where(eq(settings.id, "personal"));
+  const startedOn = profile?.startedOn || today;
   const closed: string[] = [];
 
   const allTransactions = mode === "backfill" ? await db.select().from(transactions) : [];
@@ -229,6 +233,7 @@ export async function closeMissingDays(options: { mode?: "cron" | "backfill"; lo
 
   for (let offset = 1; offset <= lookback; offset += 1) {
     const day = addDaysKey(today, -offset);
+    if (day < startedOn) break;
     if (mode === "backfill") {
       const [programDay] = await db.select({ day: programDays.day }).from(programDays).where(eq(programDays.day, day));
       const [checkin] = await db.select({ day: checkins.day }).from(checkins).where(eq(checkins.day, day));
