@@ -15,6 +15,13 @@
       "when": 1794495203481,
       "tag": "0001_bouncy_gressill",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794504462862,
+      "tag": "0002_daily_reviews",
+      "breakpoints": true
     }
   ]
 }

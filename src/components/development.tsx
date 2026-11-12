@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Flame, Award, CalendarDays, TrendingUp, Check, Zap, Info, Moon, Footprints, Cigarette, Wallet, ChevronLeft, Quote, BookOpen, Leaf, ShieldCheck } from "lucide-react";
-import { fa, todayKey, type Workspace } from "@/lib/types";
+import { Flame, Award, CalendarDays, TrendingUp, Check, Zap, Info, Moon, Footprints, Cigarette, Wallet, ChevronLeft, Quote, BookOpen, Leaf, ShieldCheck, Lock, Sparkles, CalendarCheck } from "lucide-react";
+import { fa, todayKey, addDaysKey, type Workspace, type DailyReview } from "@/lib/types";
 import { programRules, programContext, effectiveCompleted, programStreak, recentProgramSnapshots, autoDoneFor, PROGRAM_LENGTH, PROGRAM_NAME, type ProgramRule } from "@/lib/program";
 import { IconBox, Progress, type Mutate } from "@/components/ui";
 
@@ -25,14 +25,23 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
   const weekAverage = Math.round(snapshots.slice(-7).reduce((sum, day) => sum + day.percent, 0) / 7);
   const [gratitude, setGratitude] = useState(todayRow?.note || "");
   const [review, setReview] = useState("");
+  const [tab, setTab] = useState<"today" | "reviews">("today");
+  const reviews = data.dailyReviews; // مرتب از جدید به قدیم
+  const todayClosed = reviews.some((item) => item.day === today);
+
+  const askCloseToday = () => {
+    if (!window.confirm("با بستنِ روز، امروز قفل می‌شود: تیک‌ها، چک‌این، ثبت هزینه و کارهای امروز تا نیمه‌شب بعد قابل تغییر نخواهند بود. ادامه می‌دهی؟")) return;
+    void mutate({ action: "day.close" }, "امروز بسته شد؛ کارنامه‌اش در تب «جمع‌بندی» آماده است.");
+  };
 
   const toggle = (rule: ProgramRule) => {
-    if (autoDoneFor(rule, context) || busy) return;
+    if (autoDoneFor(rule, context) || busy || todayClosed) return;
     const next = manual.includes(rule.id) ? manual.filter((item) => item !== rule.id) : [...manual, rule.id];
     void mutate({ action: "program.save", completed: next, note: todayRow?.note || "" }, "ثبت شد.");
   };
 
   const saveGratitude = () => {
+    if (todayClosed) return;
     void mutate({ action: "program.save", completed: manual, note: gratitude }, "جمله‌ی امروزت ذخیره شد.");
   };
 
@@ -68,6 +77,14 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
   return <div className="view-stack">
     <div className="info-banner"><span className="info-banner-icon"><Flame size={24} /></span><div><h3>سخت‌گیرانه، اما استاندارد؛ نه خودآزاری</h3><p>این برنامه از ترکیبِ «چالش ۷۵ روزه» (اندی کاوی)، Atomic Habits (جیمز کلیر)، Implementation Intentions و «آیین خاموش‌سازی» (کال نیوپورت) ساخته شده؛ قانون ثابت است، تو تصمیم می‌گیری که بمانی یا برگردی.</p></div><span className="pill purple">روز {fa(challenge.dayNumber)} از {fa(PROGRAM_LENGTH)}</span></div>
 
+    <div className="dev-tabs" role="tablist" aria-label="نمای روزانه">
+      <button role="tab" aria-selected={tab === "today"} className={`dev-tab ${tab === "today" ? "active" : ""}`} onClick={() => setTab("today")}><Flame size={14} /> امروز</button>
+      <button role="tab" aria-selected={tab === "reviews"} className={`dev-tab ${tab === "reviews" ? "active" : ""}`} onClick={() => setTab("reviews")}><CalendarCheck size={14} /> جمع‌بندی <span className="count-badge">{fa(reviews.length)}</span></button>
+    </div>
+
+    {tab === "today" ? (
+    <>
+    {todayClosed && <div className="lock-banner"><Lock size={18} /><div><strong>امروز بسته و جمع‌بندی شده است.</strong><p>تیک‌ها، چک‌این، ثبت هزینه و کارهای امروز تا نیمه‌شب قفل‌اند؛ فردا روز جدید از صفر شروع می‌شود.</p></div></div>}
     <section className="panel program-hero">
       <div className="commitment-main">
         <div className="streak-ring program-ring" style={{ ["--ring" as string]: `${percent}` }}><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" className="ring-track" /><circle cx="60" cy="60" r="52" className="ring-value" /></svg><div className="streak-center"><strong>{fa(doneCount)}</strong><span>از {fa(programRules.length)} قانون امروز</span></div></div>
@@ -120,6 +137,10 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
       <ol className="review-questions"><li>این هفته چه چیزی را کامل کردم که هفته‌های قبل نمی‌توانستم؟</li><li>بزرگ‌ترین اصطکاک یا بهانه‌ی این هفته چه بود و ریشه‌اش چه بود؟</li><li>برای هفته‌ی آینده، کدام قانونِ چالش بیشتر در خطر شکستن است و نقشه‌ی من چیست؟</li><li>این هفته از نظر مالی چه درسی گرفتم؟ (خرج واقعی در برابر درآمد)</li></ol>
       <textarea rows={4} value={review} onChange={(event) => setReview(event.target.value)} placeholder="اینجا بنویس…" aria-label="پاسخ‌های مرور هفتگی" /><div className="review-actions"><button className="button primary small" disabled={busy || !review.trim()} onClick={saveWeeklyReview}><Check size={14} /> ذخیره در یادداشت‌ها</button><button className="text-button" onClick={() => setReview("")}>پاک کردن<ChevronLeft size={13} /></button></div>
     </section>
+    </>
+    ) : (
+      <ReviewsTab reviews={reviews} today={today} busy={busy} onCloseToday={askCloseToday} />
+    )}
 
     <div className="medical-note"><Info size={19} /><div><strong>یک برنامه سخت، جای درمان نیست.</strong><p>«چالش ۷۵ روزه» ابزار انضباط است، نه درمان افسردگی، اضطراب یا اعتیاد. اگر خلق، خواب یا میلت به آسیب جدی تغییر کرد، فوراً با روان‌شناس، روان‌پزشک یا اورژانس (۱۱۵) / اورژانس اجتماعی (۱۲۳) تماس بگیر. قطع ناگهانی الکل در مصرف سنگین و منظم، خطرناک است و باید با ارزیابی پزشک انجام شود. ورزش را اگر بیماری قلبی یا محدودیت حرکتی داری، فقط با نظر پزشک شروع کن.</p></div></div>
 
@@ -130,4 +151,115 @@ export function DevelopmentView({ data, mutate, busy }: { data: Workspace; mutat
         { title: "Implementation Intentions", text: "پیتر گولیتسر؛ برنامه‌ی اگر X رخ داد، آنگاه Y: برای لحظه‌های وسوسه (سیگار، خرج ناگهانی، گوشی) از قبل تصمیم بگیر، نه در لحظه.", icon: ShieldCheck, color: "purple" as const }].map((source) => <article className="panel source-card" key={source.title}><div className="card-top"><IconBox icon={source.icon} color={source.color} /></div><h3>{source.title}</h3><p>{source.text}</p></article>)}
     </div>
   </div>;
+}
+const dayLongLabel = (day: string) =>
+  new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", weekday: "long", day: "numeric", month: "long" }).format(new Date(`${day}T12:00:00+03:30`));
+
+const dayShortLabel = (day: string) =>
+  new Intl.DateTimeFormat("fa-IR", { timeZone: "Asia/Tehran", month: "numeric", day: "numeric" }).format(new Date(`${day}T12:00:00+03:30`));
+
+function ReviewsTab({ reviews, today, busy, onCloseToday }: { reviews: DailyReview[]; today: string; busy: boolean; onCloseToday: () => void }) {
+  const featured = reviews.find((item) => item.nextPlan);
+  const featuredLabel = featured
+    ? addDaysKey(featured.day, 1) === today
+      ? "برنامه امروز — نوشته‌ی امشبِ مربی"
+      : `برنامه‌ی روزِ ${dayLongLabel(addDaysKey(featured.day, 1))}`
+    : null;
+  const ascending = [...reviews].reverse();
+  const total = reviews.length;
+  const perfect = reviews.filter((item) => item.percent === 100).length;
+  const sumDone = reviews.reduce((sum, item) => sum + item.done, 0);
+  const avg = total ? Math.round(reviews.reduce((sum, item) => sum + item.percent, 0) / total) : 0;
+  const last30 = reviews.slice(0, 30);
+  const avg30 = last30.length ? Math.round(last30.reduce((sum, item) => sum + item.percent, 0) / last30.length) : 0;
+  let run = 0;
+  let bestStreak = 0;
+  for (const row of ascending) {
+    run = row.percent === 100 ? run + 1 : 0;
+    if (run > bestStreak) bestStreak = run;
+  }
+  const trend = ascending.slice(-14);
+  const tiles = [
+    { label: "روزهای جمع‌بندی‌شده", value: fa(total) },
+    { label: "روزهای کامل (۱۰۰٪)", value: fa(perfect) },
+    { label: "میانگین درصد — همهٔ روزها", value: `${fa(avg)}٪` },
+    { label: "میانگین درصد — ۳۰ روز اخیر", value: `${fa(avg30)}٪` },
+    { label: "مجموع قوانین کامل‌شده", value: fa(sumDone) },
+    { label: "بهترین زنجیرهٔ روزهای کامل", value: `${fa(bestStreak)} روز` },
+  ];
+
+  return (
+    <>
+      <section className="panel plan-card">
+        <div className="plan-card-head">
+          <span className="plan-card-icon"><Sparkles size={19} /></span>
+          <div className="plan-card-copy">
+            <span className="eyebrow purple-text">مربی روبه‌راه · هر شب ساعت ۱۲</span>
+            <h2>{featuredLabel || "برنامه‌ی روز بعد"}</h2>
+            {featured?.focus && <p className="plan-focus">تمرکز اصلی: {featured.focus}</p>}
+          </div>
+          <button className="button outline small" disabled={busy} onClick={onCloseToday}><Lock size={13} /> بستن و جمع‌بندی امروز</button>
+        </div>
+        {featured ? (
+          <div className="plan-body">{featured.nextPlan}</div>
+        ) : (
+          <p className="field-help">هنوز برنامه‌ای نوشته نشده؛ امشب ساعت ۱۲ به‌طور خودکار ساخته می‌شود، یا اگر می‌خواهی همین حالا «بستن و جمع‌بندی امروز» را بزن (امروز قفل خواهد شد).</p>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="section-heading"><div><h2>نمای کلی مسیر</h2><p>جمعِ کل کارنامه‌ها؛ روبه‌راه یعنی عددها بالا بروند، نه حس‌ها.</p></div><CalendarCheck size={18} className="purple-text" /></div>
+        <div className="review-stats">{tiles.map((tile) => <div className="review-stat" key={tile.label}><strong>{tile.value}</strong><span>{tile.label}</span></div>)}</div>
+        {trend.length > 0 && (
+          <div className="review-trend" aria-label="روند ۱۴ روز اخیر">
+            {trend.map((row) => (
+              <div className="trend-row" key={row.day}>
+                <span className="trend-label">{dayShortLabel(row.day)}</span>
+                <span className={`trend-bar ${row.percent === 100 ? "is-full" : row.percent >= 50 ? "is-mid" : "is-low"}`}><span style={{ width: `${Math.max(row.percent, 2)}%` }} /></span>
+                <span className="trend-percent">{fa(row.percent)}٪</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="panel">
+        <div className="section-heading"><div><h2>روز به روز</h2><p>هر روزی که می‌گذرد، بسته و بایگانی می‌شود؛ اینجا بایگانیِ صادقانه‌ی توست: از هر روز چه استفاده‌ای کردی.</p></div><span className="count-badge">{fa(total)} روز</span></div>
+        {reviews.length === 0 ? (
+          <div className="empty-state review-empty"><Sparkles size={26} /><h3>هنوز کارنامه‌ای نیست</h3><p>هر شب ساعت ۱۲، روزت به‌طور خودکار بسته و جمع‌بندی می‌شود و فردا این‌جا فهرست روزها را می‌بینی. اگر می‌خواهی همین حالا نتیجه را ببینی، «بستن و جمع‌بندی امروز» را بزن.</p></div>
+        ) : (
+          <div className="review-list">
+            {reviews.map((row) => {
+              const missedTitles = programRules.filter((rule) => row.missed.includes(rule.id)).map((rule) => rule.title);
+              return (
+                <article className="review-row" key={row.day}>
+                  <div className="review-head">
+                    <div>
+                      <div className="review-date">{dayLongLabel(row.day)}</div>
+                      <div className="review-sub">{fa(row.done)} از {fa(row.total)} قانون کامل</div>
+                    </div>
+                    <div className="review-meta">
+                      <span className={`pill ${row.percent === 100 ? "green" : row.percent >= 50 ? "purple" : "peach"}`}>{row.percent === 100 ? "روز کامل ✓" : `${fa(row.percent)}٪`}</span>
+                      {row.aiGenerated && <span className="pill blue"><Sparkles size={11} /> با جمینا</span>}
+                      <span className="pill purple"><Lock size={11} /> بسته{row.trigger === "manual" ? " · دستی" : " · خودکار"}</span>
+                    </div>
+                  </div>
+                  <div className="review-bar" role="presentation"><span style={{ width: `${Math.max(row.percent, 2)}%` }} /></div>
+                  {row.summary && <p className="review-summary">{row.summary}</p>}
+                  {missedTitles.length > 0 && <p className="review-missed">جا‌مانده: {missedTitles.join("، ")}</p>}
+                  {row.gratitude.trim() && <p className="review-gratitude">جمله‌ات: «{row.gratitude.trim()}»</p>}
+                  {row.nextPlan && (
+                    <details className="review-plan">
+                      <summary>برنامه‌ی نوشته‌شده برای روز بعد</summary>
+                      <div className="plan-body">{row.nextPlan}</div>
+                    </details>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </>
+  );
 }

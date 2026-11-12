@@ -80,3 +80,23 @@ export const programDays = robehrah.table("journey_program_days", {
   note: text("note").notNull().default(""),
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
+
+export const dailyReviews = robehrah.table("journey_daily_reviews", {
+  day: text("day").primaryKey(),
+  percent: integer("percent").notNull(),
+  done: integer("done").notNull(),
+  total: integer("total").notNull(),
+  // Effective rule ids that were completed / missed on the closed day.
+  completed: jsonb("completed").$type<string[]>().notNull().default([]),
+  missed: jsonb("missed").$type<string[]>().notNull().default([]),
+  gratitude: text("gratitude").notNull().default(""),
+  checkinMood: integer("checkin_mood"),
+  checkinSleep: integer("checkin_sleep"),
+  checkinCigarettes: integer("checkin_cigarettes"),
+  summary: text("summary").notNull().default(""),
+  focus: text("focus").notNull().default(""),
+  nextPlan: text("next_plan").notNull().default(""),
+  trigger: text("trigger").notNull().default("cron"),
+  aiGenerated: boolean("ai_generated").notNull().default(false),
+  createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+});

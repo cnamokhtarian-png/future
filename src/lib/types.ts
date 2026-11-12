@@ -1,4 +1,4 @@
-import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays } from "@/db/schema";
+import type { settings, tasks, applications, projects, checkins, transactions, notes, programDays, dailyReviews } from "@/db/schema";
 
 export type Task = typeof tasks.$inferSelect;
 export type Application = typeof applications.$inferSelect;
@@ -7,6 +7,7 @@ export type Checkin = typeof checkins.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Note = typeof notes.$inferSelect;
 export type ProgramDay = typeof programDays.$inferSelect;
+export type DailyReview = typeof dailyReviews.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 
 export type Workspace = {
@@ -18,6 +19,7 @@ export type Workspace = {
   transactions: Transaction[];
   notes: Note[];
   programDays: ProgramDay[];
+  dailyReviews: DailyReview[];
 };
 
 export type View = "assistant" | "overview" | "roadmap" | "career" | "projects" | "progress" | "health" | "finance" | "development" | "notes" | "guide";
@@ -29,6 +31,12 @@ export function todayKey() {
 
 export function fa(value: number | string) {
   return typeof value === "number" ? new Intl.NumberFormat("fa-IR").format(value) : value.replace(/\d/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
+}
+
+export function addDaysKey(day: string, delta: number): string {
+  const [year, month, dayOfMonth] = day.split("-").map(Number);
+  const base = Date.UTC(year, month - 1, dayOfMonth) + delta * 86_400_000;
+  return new Date(base).toISOString().slice(0, 10);
 }
 
 export function journeyDay(start: string) {

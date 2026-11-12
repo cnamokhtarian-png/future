@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { settings, tasks, applications, projects, checkins, transactions, notes, programDays } from "@/db/schema";
 import { todayKey } from "@/lib/types";
 import { programRuleIds } from "@/lib/program";
+import { isDayClosed, closeDay } from "@/lib/daily-review";
 
 export const id = z.string().min(1).max(150);
 export const title = z.string().trim().min(1, "عنوان را وارد کن").max(250);
@@ -30,6 +31,7 @@ export const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("note.delete"), id }),
   z.object({ action: z.literal("settings.update"), name: z.string().trim().min(1).max(40), startedOn: startDate, savingGoal: z.number().int().positive().max(2000000000), dailyTarget: z.number().int().min(1).max(20) }),
   z.object({ action: z.literal("program.save"), completed: z.array(z.string().max(50)).max(30), note: z.string().max(5000).optional().default("") }),
+  z.object({ action: z.literal("day.close") }),
 ]);
 
 export type ActionResult = { ok: true } | { ok: false; error: string; status: number };
@@ -41,6 +43,13 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
   }
   const input = parsed.data;
   try {
+    // Once a day is closed (هر شب ساعت ۱۲) it is locked: mutations that touch
+    // the day itself are rejected. Free-floating data (notes, jobs, projects,
+    // settings) is not day-scoped and stays editable.
+    const dayScopedActions = new Set(["task.create", "task.toggle", "task.time", "task.delete", "checkin.save", "finance.create", "finance.delete", "program.save"]);
+    if (dayScopedActions.has(input.action) && (await isDayClosed(todayKey()))) {
+      return { ok: false, error: "این روز بسته و جمع‌بندی شده است؛ تغییرهای امروز تا فردا پشتیبانی نمی‌شود.", status: 409 };
+    }
     switch (input.action) {
       case "task.create":
         await db.insert(tasks).values({ id: crypto.randomUUID(), title: input.title, category: input.category, minutes: input.minutes, day: todayKey(), time: input.time || null });
@@ -95,6 +104,13 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
       case "settings.update":
         await db.update(settings).set({ name: input.name, startedOn: input.startedOn, savingGoal: input.savingGoal, dailyTarget: input.dailyTarget }).where(eq(settings.id, "personal"));
         break;
+      case "day.close": {
+        const result = await closeDay(todayKey(), { trigger: "manual", useAi: true });
+        if (!result.created && result.row) {
+          return { ok: false, error: "امروز قبلاً بسته و جمع‌بندی شده است.", status: 409 };
+        }
+        break;
+      }
       case "program.save": {
         const completed = [...new Set(input.completed.filter((rule) => programRuleIds.includes(rule)))];
         const day = todayKey();

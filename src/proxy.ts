@@ -41,5 +41,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Allow static assets, icons and the health probe through; protect everything else.
-  matcher: ["/((?!_next/static|_next/image|icon.svg|favicon.ico|api/health).*)"],
+  // /api/health and /api/cron are exempt from Basic Auth; both guard themselves (health is public, cron uses CRON_SECRET).
+  matcher: ["/((?!_next/static|_next/image|icon.svg|favicon.ico|api/health|api/cron).*)"],
 };
