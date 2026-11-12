@@ -22,8 +22,9 @@ async function probeModel(key: string, model: string): Promise<ProbeResult> {
       cache: "no-store",
     });
     if (response.ok) {
-      const raw = await response.text();
-      return { model, status: response.status, ok: true, message: raw.slice(0, 500) };
+      const data = (await response.json().catch(() => null)) as { output_text?: string; steps?: Array<{ type?: string }> } | null;
+      const stepTypes = (data?.steps || []).map((step) => step.type || "unknown").join(",");
+      return { model, status: response.status, ok: true, message: `output_chars=${(data?.output_text || "").length} steps=[${stepTypes}]` };
     }
     let message = "";
     try {
