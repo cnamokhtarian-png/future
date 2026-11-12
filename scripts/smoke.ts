@@ -7,6 +7,23 @@ import { checkins } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { todayKey, type Workspace } from "@/lib/types";
 
+async function launchBrowser() {
+  try {
+    return await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  } catch (defaultError) {
+    // Sandboxed environments where the Playwright CDN is unreachable can use
+    // the npm-hosted Chromium build instead.
+    console.warn("Playwright's bundled Chromium is unavailable, using @sparticuz/chromium fallback.");
+    try {
+      const sparticuz = (await import("@sparticuz/chromium")).default;
+      return await chromium.launch({ headless: true, args: sparticuz.args, executablePath: await sparticuz.executablePath() });
+    } catch (fallbackError) {
+      console.error("Falling back to @sparticuz/chromium also failed.", fallbackError);
+      throw defaultError;
+    }
+  }
+}
+
 async function main() {
   const base = process.env.TEST_BASE_URL || "http://localhost:3000";
   async function getData(): Promise<Workspace> { const result = await fetch(`${base}/api/workspace`).then((response) => response.json()); return result.data; }
@@ -15,7 +32,7 @@ async function main() {
   const originalCheckin = original.checkins.find((entry) => entry.day === todayKey());
   const project = original.projects[0];
   const ids = { tasks: [] as string[], jobs: [] as string[], notes: [] as string[], finance: [] as string[] };
-  const browser = await chromium.launch({ headless: true, args: ["--no-sandbox"] });
+  const browser = await launchBrowser();
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));

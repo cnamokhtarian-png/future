@@ -1,8 +1,12 @@
-import { pgTable, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgSchema, text, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 
 export type ProjectStep = { title: string; done: boolean };
 
-export const settings = pgTable("journey_settings", {
+// This app stores its tables in a dedicated Postgres schema so it never
+// collides with other applications sharing the same database.
+export const robehrah = pgSchema("robehrah");
+
+export const settings = robehrah.table("journey_settings", {
   id: text("id").primaryKey(),
   name: text("name").notNull().default("رفیق"),
   startedOn: text("started_on").notNull(),
@@ -11,7 +15,7 @@ export const settings = pgTable("journey_settings", {
   dailyTarget: integer("daily_target").notNull().default(3),
 });
 
-export const tasks = pgTable("journey_tasks", {
+export const tasks = robehrah.table("journey_tasks", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   category: text("category").notNull().default("personal"),
@@ -22,7 +26,7 @@ export const tasks = pgTable("journey_tasks", {
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-export const applications = pgTable("journey_applications", {
+export const applications = robehrah.table("journey_applications", {
   id: text("id").primaryKey(),
   company: text("company").notNull(),
   role: text("role").notNull(),
@@ -32,7 +36,7 @@ export const applications = pgTable("journey_applications", {
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-export const projects = pgTable("journey_projects", {
+export const projects = robehrah.table("journey_projects", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").notNull(),
@@ -43,7 +47,7 @@ export const projects = pgTable("journey_projects", {
   priority: integer("priority").notNull(),
 });
 
-export const checkins = pgTable("journey_checkins", {
+export const checkins = robehrah.table("journey_checkins", {
   day: text("day").primaryKey(),
   mood: integer("mood").notNull(),
   note: text("note").notNull().default(""),
@@ -55,7 +59,7 @@ export const checkins = pgTable("journey_checkins", {
   updatedAt: timestamp("updated_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-export const transactions = pgTable("journey_transactions", {
+export const transactions = robehrah.table("journey_transactions", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   amount: integer("amount").notNull(),
@@ -63,7 +67,7 @@ export const transactions = pgTable("journey_transactions", {
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
-export const notes = pgTable("journey_notes", {
+export const notes = robehrah.table("journey_notes", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   body: text("body").notNull(),

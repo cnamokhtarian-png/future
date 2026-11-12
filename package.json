@@ -6,7 +6,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "test": "npm run typecheck && npm run lint && npm run build",
+    "test:e2e": "tsx scripts/smoke.ts"
   },
   "dependencies": {
     "@fontsource-variable/vazirmatn": "^5.3.0",
@@ -18,10 +22,12 @@
     "pg": "8.20.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "server-only": "^0.0.1",
     "tsx": "^4.23.15",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^153.0.0",
     "@tailwindcss/postcss": "4.1.17",
     "@types/node": "22.19.15",
     "@types/pg": "8.18.0",

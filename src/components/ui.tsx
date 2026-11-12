@@ -18,7 +18,9 @@ export function Modal({ title, subtitle, children, onClose, wide = false }: { ti
   const heading = useId();
   const dialog = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  useEffect(() => {
+    closeRef.current = onClose;
+  });
   useEffect(() => {
     const original = document.activeElement as HTMLElement | null;
     const oldOverflow = document.body.style.overflow;
@@ -52,17 +54,21 @@ export function MoodFace({ value, selected = false }: { value: number; selected?
 }
 
 export function DailyCheckin({ checkin, mutate, busy, expanded = false }: { checkin?: Checkin; mutate: Mutate; busy: boolean; expanded?: boolean }) {
+  // Remount the form with fresh state whenever the stored check-in changes
+  // (e.g. after a save round-trip), instead of syncing via an effect.
+  const signature = checkin
+    ? [checkin.updatedAt, checkin.mood, checkin.note, checkin.cannabisFree, checkin.alcoholFree, checkin.walked, checkin.sleepHours, checkin.cigarettes].join("|")
+    : "empty";
+  return <DailyCheckinForm key={signature} checkin={checkin} mutate={mutate} busy={busy} expanded={expanded} />;
+}
+
+function DailyCheckinForm({ checkin, mutate, busy, expanded = false }: { checkin?: Checkin; mutate: Mutate; busy: boolean; expanded?: boolean }) {
   const [mood, setMood] = useState(checkin?.mood || 0);
   const [note, setNote] = useState(checkin?.note || "");
   const [habits, setHabits] = useState({ cannabisFree: checkin?.cannabisFree || false, alcoholFree: checkin?.alcoholFree || false, walked: checkin?.walked || false });
   const [sleep, setSleep] = useState(checkin?.sleepHours?.toString() || "");
   const [cigarettes, setCigarettes] = useState(checkin?.cigarettes?.toString() || "");
   const [error, setError] = useState("");
-  useEffect(() => {
-    setMood(checkin?.mood || 0); setNote(checkin?.note || "");
-    setHabits({ cannabisFree: checkin?.cannabisFree || false, alcoholFree: checkin?.alcoholFree || false, walked: checkin?.walked || false });
-    setSleep(checkin?.sleepHours?.toString() || ""); setCigarettes(checkin?.cigarettes?.toString() || "");
-  }, [checkin?.updatedAt, checkin?.mood, checkin?.note, checkin?.cannabisFree, checkin?.alcoholFree, checkin?.walked, checkin?.sleepHours, checkin?.cigarettes]);
   const labels = ["خسته‌ام", "دلگیرم", "معمولی", "خوبم", "عالی‌ام"];
   return <form className={`checkin-form ${expanded ? "expanded" : ""}`} onSubmit={async (event) => {
     event.preventDefault();
