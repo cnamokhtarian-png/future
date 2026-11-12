@@ -1,5 +1,5 @@
 import { tehranDayKey } from "@/lib/tehran-day";
-import { projectProgress, type Task, type Transaction, type Workspace } from "@/lib/types";
+import { projectProgress, type Checkin, type Task, type Transaction, type Workspace } from "@/lib/types";
 
 export const timeBlocks = [
   { id: "morning", label: "صبح", hint: "۵ تا ۱۱", from: 5, to: 11 },
@@ -62,6 +62,53 @@ export function computeStreak(tasks: Task[], target: number) {
     best: Math.max(best, streak),
     consistency: plannedDays.length ? Math.round((metDays / plannedDays.length) * 100) : 0,
     plannedDays: plannedDays.length,
+  };
+}
+
+export type WeekSummary = {
+  days: number;
+  done: number;
+  planned: number;
+  metDays: number;
+  focusMinutes: number;
+  avgPercent: number;
+  avgMood: number | null;
+  checkins: number;
+};
+
+// Roll-up of the last `count` Tehran calendar days (today included). Days with
+// no plan are not punished in avgPercent; they simply do not count.
+export function weekStats(tasks: Task[], checkins: Checkin[], target: number, count = 7): WeekSummary {
+  const days = Array.from({ length: count }, (_, index) => dayKey(count - 1 - index));
+  let done = 0;
+  let focusMinutes = 0;
+  let planned = 0;
+  let metDays = 0;
+  let percentSum = 0;
+  for (const day of days) {
+    const list = tasks.filter((task) => task.day === day);
+    const stats = dayStats(tasks, day);
+    done += stats.done;
+    focusMinutes += list.filter((task) => task.done).reduce((sum, task) => sum + task.minutes, 0);
+    if (stats.total > 0) {
+      planned += 1;
+      percentSum += stats.percent;
+      if (stats.done >= goalFor(stats, target)) metDays += 1;
+    }
+  }
+  const weekCheckins = checkins.filter((entry) => days.includes(entry.day));
+  const avgMood = weekCheckins.length
+    ? Math.round((weekCheckins.reduce((sum, entry) => sum + entry.mood, 0) / weekCheckins.length) * 10) / 10
+    : null;
+  return {
+    days: count,
+    done,
+    planned,
+    metDays,
+    focusMinutes,
+    avgPercent: planned ? Math.round(percentSum / planned) : 0,
+    avgMood,
+    checkins: weekCheckins.length,
   };
 }
 

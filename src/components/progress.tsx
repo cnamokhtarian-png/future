@@ -31,8 +31,16 @@ import {
   projectPercent,
   recentDays,
   timeBlocks,
+  weekStats,
 } from "@/lib/stats";
 import { IconBox, Progress, type Mutate } from "@/components/ui";
+
+function focusLabel(minutes: number): string {
+  if (minutes < 60) return `${fa(minutes)} دقیقه`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${fa(hours)} ساعت و ${fa(rest)} دقیقه` : `${fa(hours)} ساعت`;
+}
 
 const icons = {
   spark: Sparkles,
@@ -53,6 +61,7 @@ export function ProgressView({ data, mutate, busy }: { data: Workspace; mutate: 
   const goal = goalFor(todayStats, target);
   const remaining = Math.max(0, goal - todayStats.done);
   const { streak, best, consistency, plannedDays } = computeStreak(data.tasks, target);
+  const week = weekStats(data.tasks, data.checkins, target);
   const days = recentDays(data.tasks, 14);
   const badges = achievements(data, streak);
   const earned = badges.filter((badge) => badge.earned).length;
@@ -212,6 +221,75 @@ export function ProgressView({ data, mutate, busy }: { data: Workspace; mutate: 
         <p className="field-help chart-help">
           <Info size={13} /> روزهای بدون برنامه، زنجیره را نمی‌شکنند؛ فقط شمرده نمی‌شوند. یک روز از دست رفته، شروع
           دوباره است نه پایان مسیر.
+        </p>
+      </section>
+
+      <section className="panel weekly-card" aria-label="کارنامهٔ هفتگی">
+        <div className="section-heading">
+          <div>
+            <h2>کارنامهٔ ۷ روز گذشته</h2>
+            <p>
+              {new Intl.DateTimeFormat("fa-IR", { day: "numeric", month: "long" }).format(
+                new Date(`${dayKey(6)}T12:00:00Z`),
+              )}{" "}
+              تا{" "}
+              {new Intl.DateTimeFormat("fa-IR", { day: "numeric", month: "long" }).format(
+                new Date(`${dayKey(0)}T12:00:00Z`),
+              )}{" "}
+              — صادقانه و بدون قضاوت؛ همین که ثبتش کردی، خودش پیشرفته.
+            </p>
+          </div>
+          <IconBox icon={CalendarDays} color="blue" />
+        </div>
+        <div className="progress-stats weekly-stats">
+          {[
+            { title: "قدم‌های انجام‌شده", value: fa(week.done), hint: "در این هفته", icon: Target, color: "purple" },
+            {
+              title: "روزهای به تعهد رسیدی",
+              value: fa(week.metDays),
+              hint: `از ${fa(week.planned)} روز برنامه‌دار`,
+              icon: Flame,
+              color: "peach",
+            },
+            {
+              title: "زمان تمرکز",
+              value: focusLabel(week.focusMinutes),
+              hint: "مجموع دقیقه‌های قدم‌های انجام‌شده",
+              icon: Clock3,
+              color: "blue",
+            },
+            {
+              title: "میانگین انجام برنامه",
+              value: `${fa(week.avgPercent)}٪`,
+              hint: "در روزهای برنامه‌دار",
+              icon: TrendingUp,
+              color: "green",
+            },
+            {
+              title: "میانگین حال هفته",
+              value: week.avgMood == null ? "—" : fa(week.avgMood),
+              hint: week.checkins ? `از ۵ · ${fa(week.checkins)} ثبت چک‌این` : "هنوز چک‌اینی ثبت نشده",
+              icon: Heart,
+              color: "peach",
+            },
+          ].map((stat) => (
+            <div className="panel progress-stat" key={stat.title}>
+              <IconBox icon={stat.icon} color={stat.color} />
+              <strong>{stat.value}</strong>
+              <span>{stat.title}</span>
+              <small>{stat.hint}</small>
+            </div>
+          ))}
+        </div>
+        <p className="field-help chart-help">
+          <Info size={13} />{" "}
+          {week.planned === 0
+            ? "این هفته هنوز روز برنامه‌داری ثبت نشده؛ با یک قدم کوچک فردا شروع کن."
+            : week.metDays >= 5
+              ? "هفته‌ای محکم بود؛ این نظم دقیقاً همان چیزی است که می‌ماند."
+              : week.metDays >= 3
+                ? "هفته‌ای واقعی بود؛ عالی نبود، ولی ادامه داشت. همین مهم است."
+                : "هفته سخت بود و همین ثبت‌کردنش نشانهٔ حضورته؛ هفتهٔ بعد را کوتاه‌تر و کوچک‌تر شروع کن."}
         </p>
       </section>
 

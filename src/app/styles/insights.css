@@ -402,6 +402,9 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 }
+.weekly-stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
 .progress-stat {
   text-align: center;
   padding: 20px 15px;
