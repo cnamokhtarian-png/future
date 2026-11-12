@@ -1,5 +1,7 @@
 import "dotenv/config";
 import assert from "node:assert/strict";
+import path from "node:path";
+import { tmpdir } from "node:os";
 import { mkdir } from "node:fs/promises";
 import { chromium, expect } from "@playwright/test";
 import { db, pool } from "@/db";
@@ -12,10 +14,20 @@ async function launchBrowser() {
     return await chromium.launch({ headless: true, args: ["--no-sandbox"] });
   } catch (defaultError) {
     // Sandboxed environments where the Playwright CDN is unreachable can use
-    // the npm-hosted Chromium build instead.
+    // the npm-hosted Chromium build instead. Its system libraries are only
+    // auto-extracted on Amazon Linux 2023, so inflate them manually here.
     console.warn("Playwright's bundled Chromium is unavailable, using @sparticuz/chromium fallback.");
     try {
-      const sparticuz = (await import("@sparticuz/chromium")).default;
+      const sparticuzModule = await import("@sparticuz/chromium");
+      const sparticuz = sparticuzModule.default;
+      const { inflate, setupLambdaEnvironment } = sparticuzModule;
+      try {
+        const binDir = path.join(process.cwd(), "node_modules", "@sparticuz", "chromium", "bin");
+        await inflate(path.join(binDir, "al2023.tar.br"));
+        setupLambdaEnvironment(path.join(tmpdir(), "al2023", "lib"));
+      } catch (libError) {
+        console.warn("Could not inflate al2023 system libraries; the browser may fail to start.", libError);
+      }
       return await chromium.launch({ headless: true, args: sparticuz.args, executablePath: await sparticuz.executablePath() });
     } catch (fallbackError) {
       console.error("Falling back to @sparticuz/chromium also failed.", fallbackError);

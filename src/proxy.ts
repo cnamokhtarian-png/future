@@ -40,6 +40,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Allow static assets and icons through; protect everything else including API routes.
-  matcher: ["/((?!_next/static|_next/image|icon.svg|favicon.ico).*)"],
+  // Allow static assets, icons and the health probe through; protect everything else.
+  matcher: ["/((?!_next/static|_next/image|icon.svg|favicon.ico|api/health).*)"],
 };
