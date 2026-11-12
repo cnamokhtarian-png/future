@@ -8,16 +8,16 @@ export async function GET() {
     await db.execute(sql`select 1`);
     return Response.json({ ok: true });
   } catch (error) {
-    // Return only the underlying error code (e.g. "28P01", "ENOTFOUND") — never
-    // messages, which may leak hosts or credentials.
+    // Diagnostics: surface the underlying error code and a sanitized message.
+    // Any connection-string-like fragments are redacted before returning.
     const cause =
-      error instanceof Error && error.cause instanceof Error
-        ? (error.cause as { code?: string }).code
-        : undefined;
-    const own = (error as { code?: string }).code;
-    return Response.json(
-      { ok: false, code: cause ?? own ?? "unknown" },
-      { status: 500 },
-    );
+      error instanceof Error && error.cause instanceof Error ? error.cause : error;
+    const raw = cause instanceof Error ? cause.message : String(cause);
+    const sanitized = raw
+      .replace(/postgres(ql)?:\/\/\S+/gi, "[connection string redacted]")
+      .replace(/sslmode=\S+/gi, "[redacted]")
+      .slice(0, 300);
+    const code = (cause as { code?: string })?.code;
+    return Response.json({ ok: false, code: code ?? "unknown", detail: sanitized }, { status: 500 });
   }
 }
