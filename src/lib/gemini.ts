@@ -3,10 +3,14 @@ import "server-only";
 export type InteractionStep = Record<string, unknown>;
 
 const API_ROOT = "https://generativelanguage.googleapis.com/v1beta";
-export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-// Ordered fallbacks: if the primary model is not available for this account/key,
+export const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+// Ordered fallbacks: if a model is unavailable or overloaded for this key,
 // we transparently try the others before surfacing an error.
-const MODEL_CANDIDATES = [...new Set([GEMINI_MODEL, "gemini-3.5-flash", "gemini-3.5-flash-lite"])];
+const MODEL_CANDIDATES = [...new Set([GEMINI_MODEL, "gemini-3.8-flash", "gemini-3.5-flash-lite"])];
+// Transient failures (overload / rate limit) deserve a quick retry before
+// moving on to the next model.
+const RETRY_DELAYS_MS = [600, 1600];
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class GeminiError extends Error {
   constructor(message: string, readonly status?: number) {
@@ -89,23 +93,32 @@ export async function callGemini({ inputSteps, tools }: { inputSteps: Interactio
     const interactiveTools = tools?.length
       ? [...(tools as Array<Record<string, unknown>>)].map((tool) => (tool.type ? tool : { type: "function", ...tool }))
       : undefined;
-    const response = await postToInteractions(key, {
-      model,
-      input: inputSteps,
-      ...(interactiveTools ? { tools: interactiveTools } : {}),
-      store: false,
-    });
-    if (response.ok) {
+    let response: Response | null = null;
+    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+      response = await postToInteractions(key, {
+        model,
+        input: inputSteps,
+        ...(interactiveTools ? { tools: interactiveTools } : {}),
+        store: false,
+      });
+      // Only overload / rate-limit responses are worth an in-place retry.
+      if ((response.status === 503 || response.status === 429) && attempt < RETRY_DELAYS_MS.length) {
+        await sleep(RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+      break;
+    }
+    if (response!.ok) {
       let data: Record<string, unknown>;
-      try { data = (await response.json()) as Record<string, unknown>; }
+      try { data = (await response!.json()) as Record<string, unknown>; }
       catch { throw new GeminiError("پاسخ غیرمنتظره‌ای از جمینا دریافت شد.", 502); }
       return parseOutcome(data);
     }
     let message = "";
-    try { message = ((await response.json()) as { error?: { message?: string } })?.error?.message || ""; } catch { /* no body */ }
-    failures.push({ model, status: response.status, message });
-    // Auth/model/quota errors can be model-specific; try the next candidate.
-    if (response.status >= 500) break;
+    try { message = ((await response!.json()) as { error?: { message?: string } })?.error?.message || ""; } catch { /* no body */ }
+    failures.push({ model, status: response!.status, message });
+    // Every failure — including 5xx — may be model-specific (overload), so we
+    // continue to the next candidate instead of giving up early.
   }
 
   const last = failures[failures.length - 1];
