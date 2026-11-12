@@ -13,7 +13,7 @@ function unauthorized() {
   });
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const user = process.env.SITE_AUTH_USER;
   const password = process.env.SITE_AUTH_PASSWORD;
   if (!user || !password) {
