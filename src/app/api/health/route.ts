@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { sql } from "drizzle-orm";
+import { extractTextFromInteraction } from "@/lib/gemini";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,9 +23,11 @@ async function probeModel(key: string, model: string): Promise<ProbeResult> {
       cache: "no-store",
     });
     if (response.ok) {
-      const data = (await response.json().catch(() => null)) as { output_text?: string; steps?: Array<{ type?: string }> } | null;
-      const stepTypes = (data?.steps || []).map((step) => step.type || "unknown").join(",");
-      return { model, status: response.status, ok: true, message: `output_chars=${(data?.output_text || "").length} steps=[${stepTypes}]` };
+      const data = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+      const steps = Array.isArray(data?.steps) ? (data.steps as Array<{ type?: string }>) : [];
+      const stepTypes = steps.map((step) => step.type || "unknown").join(",");
+      const extracted = data ? extractTextFromInteraction(data).length : -1;
+      return { model, status: response.status, ok: true, message: `extracted_chars=${extracted} steps=[${stepTypes}]` };
     }
     let message = "";
     try {

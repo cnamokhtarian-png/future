@@ -51,24 +51,36 @@ export type InteractionOutcome = {
   text: string;
 };
 
-function extractText(data: Record<string, unknown>): string {
+export function extractTextFromInteraction(data: Record<string, unknown>): string {
   if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
+  // Walk the payload generically and harvest every "text" string. The exact
+  // step envelope (e.g. model_output > content > text parts) may vary between
+  // API revisions; this tolerates all of them.
   const texts: string[] = [];
-  const steps = Array.isArray(data.steps) ? data.steps : [];
-  for (const step of steps) {
-    if (!step || typeof step !== "object") continue;
-    const record = step as Record<string, unknown>;
-    if (typeof record.text === "string") texts.push(record.text);
-    const content = record.content;
-    if (typeof content === "string") texts.push(content);
-    else if (Array.isArray(content)) {
-      for (const item of content) {
-        if (typeof item === "string") texts.push(item);
-        else if (item && typeof item === "object" && typeof (item as Record<string, unknown>).text === "string") texts.push((item as Record<string, unknown>).text as string);
-      }
+  const walk = (node: unknown, depth: number) => {
+    if (!node || depth > 8) return;
+    if (Array.isArray(node)) {
+      for (const item of node) walk(item, depth + 1);
+      return;
     }
-  }
+    if (typeof node !== "object") return;
+    const record = node as Record<string, unknown>;
+    const recordType = typeof record.type === "string" ? record.type : "";
+    // Never harvest thought-step signatures or function-call payloads.
+    if (recordType === "function_call" || recordType === "function_result") return;
+    if (typeof record.text === "string" && record.text.trim()) texts.push(record.text);
+    for (const [key, value] of Object.entries(record)) {
+      if (key === "text" || key === "signature" || key === "thoughtSignature") continue;
+      if (value && typeof value === "object") walk(value, depth + 1);
+    }
+  };
+  const steps = Array.isArray(data.steps) ? data.steps : [];
+  for (const step of steps) walk(step, 0);
   return texts.join("\n").trim();
+}
+
+function extractText(data: Record<string, unknown>): string {
+  return extractTextFromInteraction(data);
 }
 
 function parseOutcome(data: Record<string, unknown>): InteractionOutcome {
