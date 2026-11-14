@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import { X, Check, ArrowLeft, Heart, Leaf, Moon, Footprints, Cigarette, type LucideIcon } from "lucide-react";
-import { fa, type Checkin, type Mutation } from "@/lib/types";
+import { X, Check, Clock3, ArrowLeft, Heart, Leaf, Moon, Footprints, Cigarette, type LucideIcon } from "lucide-react";
+import { fa, categoryLabels, type Checkin, type Mutation, type Task } from "@/lib/types";
+import { formatTime } from "@/lib/stats";
 
 export type Mutate = (input: Mutation, message?: string) => Promise<boolean>;
 
@@ -350,3 +351,48 @@ export function Money({ amount }: { amount: number }) {
     </span>
   );
 }
+
+export function TaskRow({
+  task,
+  busy,
+  onToggle,
+  onDelete,
+}: {
+  task: Task;
+  busy: boolean;
+  onToggle: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div className={`daily-task ${task.done ? "done" : ""}`}>
+      <button
+        role="checkbox"
+        aria-checked={task.done}
+        aria-label={task.title}
+        disabled={busy}
+        className="task-checkbox"
+        onClick={onToggle}
+      >
+        {task.done && <Check size={13} strokeWidth={2.5} />}
+      </button>
+      <div className="task-content">
+        <h3>{task.title}</h3>
+        <div className="task-meta">
+          <span className={`category-tag ${task.category}`}>{categoryLabels[task.category] || "شخصی"}</span>
+          <span>
+            <Clock3 size={11} /> {fa(task.minutes)} دقیقه
+          </span>
+          {task.time && (
+            <span className="task-time">
+              <Clock3 size={11} /> {formatTime(task.time)}
+            </span>
+          )}
+        </div>
+      </div>
+      <button className="task-delete icon-button" onClick={onDelete} aria-label={`حذف ${task.title}`}>
+        <X size={14} />
+      </button>
+    </div>
+  );
+}
+

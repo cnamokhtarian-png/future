@@ -18,7 +18,7 @@ import {
 
 const views = [
   "assistant",
-  "overview",
+  "today",
   "roadmap",
   "career",
   "projects",
@@ -26,6 +26,7 @@ const views = [
   "health",
   "finance",
   "development",
+  "timeline",
   "notes",
   "guide",
 ] as const;

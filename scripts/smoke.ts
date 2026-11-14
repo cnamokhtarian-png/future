@@ -74,6 +74,18 @@ async function main() {
     await page.evaluate(() => document.fonts.ready);
     await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
     await expect(page.locator("main h1")).toContainText("خوش اومدی");
+    const todayGroup = nav().getByRole("button", { name: "امروز", exact: true });
+    const pathGroup = nav().getByRole("button", { name: "مسیر من", exact: true });
+    const meGroup = nav().getByRole("button", { name: "خودت", exact: true });
+    await expect(todayGroup).toBeVisible();
+    await expect(pathGroup).toBeVisible();
+    await expect(meGroup).toBeVisible();
+    await pathGroup.click();
+    await expect(pathGroup).toHaveAttribute("aria-expanded", "false");
+    await expect(nav().getByRole("button", { name: "نقشه راه" })).not.toBeVisible();
+    await pathGroup.click();
+    await expect(pathGroup).toHaveAttribute("aria-expanded", "true");
+    console.log("PASS: grouped sidebar renders and collapses");
     await page.getByRole("button", { name: "افزودن کار", exact: true }).click();
     let dialog = page.getByRole("dialog");
     const taskTitle = "آزمون موقت ذخیره قدم روزانه";
@@ -89,6 +101,7 @@ async function main() {
     await expect(page.getByRole("checkbox", { name: taskTitle, exact: true })).toHaveAttribute("aria-checked", "true");
     await page.getByRole("button", { name: `حذف ${taskTitle}`, exact: true }).click();
     await Promise.all([pendingSave(), page.getByRole("dialog").getByRole("button", { name: "بله، حذف شود" }).click()]);
+    await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByRole("checkbox", { name: taskTitle, exact: true })).toHaveCount(0);
     console.log("PASS: create task, persist completion after reload, confirmed deletion");
 
@@ -111,7 +124,7 @@ async function main() {
     assert.ok(data.checkins.find((entry) => entry.day === todayKey())?.note.includes("یادداشت موقت آزمون"));
     console.log("PASS: mood and habit updates preserve each other");
 
-    await nav().getByRole("button", { name: "نقشه راه من" }).click();
+    await nav().getByRole("button", { name: "نقشه راه" }).click();
     await Promise.all([
       pendingSave(),
       page.getByRole("button", { name: "افزودن به امروز", exact: true }).first().click(),
@@ -183,12 +196,17 @@ async function main() {
       savingGoal: data.settings.savingGoal,
       dailyTarget: beforeTarget,
     });
-    await nav().getByRole("button", { name: "نمای کلی", exact: true }).click();
+    await nav().getByRole("button", { name: "امروز من", exact: true }).click();
     await expect(page.locator(".time-block")).toHaveCount(5);
     await expect(page.locator(".time-block").first()).toContainText("صبح");
     await expect(page.locator(".commitment-strip")).toContainText("تعهد روزانه");
     await expect(page.locator(".next-action")).toContainText("قدم بعدی تو");
     console.log("PASS: scheduled task blocks, progress chart, daily commitment target");
+
+    await nav().getByRole("button", { name: "تغییرات من", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "دفترچه‌ی تغییرات تو" })).toBeVisible();
+    await expect(page.locator(".timeline-item").first()).toBeVisible();
+    console.log("PASS: changes timeline renders recorded events");
 
     const invalid = await fetch(`${base}/api/workspace`, {
       method: "POST",
@@ -231,7 +249,7 @@ async function main() {
     console.log("RESTORED: original personal data; no test records left behind");
   }
   try {
-    await page.goto(`${base}/#overview`, { waitUntil: "networkidle" });
+    await page.goto(`${base}/#today`, { waitUntil: "networkidle" });
     await page.reload({ waitUntil: "networkidle" });
     await page.evaluate(() => document.fonts.ready);
     await page.waitForTimeout(500);
@@ -240,19 +258,20 @@ async function main() {
     await page.screenshot({ path: "artifacts/dashboard-viewport.png" });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     for (const title of [
-      "نقشه راه من",
+      "نقشه راه",
       "مسیر شغلی",
       "پروژه‌های من",
+      "تغییرات من",
       "حال خوب و عادت‌ها",
       "مدیریت مالی",
       "یادداشت‌های من",
     ]) {
       await nav()
-        .getByRole("button", { name: title, exact: title !== "نقشه راه من" })
+        .getByRole("button", { name: title, exact: title !== "نقشه راه" })
         .click();
       await expect(page.locator("main h1")).toBeVisible();
     }
-    await nav().getByRole("button", { name: "نمای کلی", exact: true }).click();
+    await nav().getByRole("button", { name: "امروز من", exact: true }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(500);

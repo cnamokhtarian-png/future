@@ -13,8 +13,9 @@ import {
   programDays,
   planItems,
   socialLogs,
+  activity,
 } from "@/db/schema";
-import { todayKey } from "@/lib/types";
+import { fa, statusLabels, todayKey } from "@/lib/types";
 import { programRuleIds } from "@/lib/program";
 import { PLAN_KIND_IDS } from "@/lib/plan";
 import { isDayClosed, closeDay, generatePlanForToday } from "@/lib/daily-review";
@@ -127,6 +128,146 @@ export const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("social.delete"), id }),
   z.object({ action: z.literal("day.close") }),
 ]);
+
+
+type ActionInput = z.infer<typeof actionSchema>;
+
+const faNumber = (value: number) => new Intl.NumberFormat("fa-IR").format(value);
+
+const planFieldLabels: Record<string, string> = {
+  time: "ساعت",
+  title: "عنوان",
+  kind: "نوع",
+  note: "یادداشت",
+};
+
+// جمله‌ی کوتاه و خوانا برای تایم‌لاین «تغییرات من»؛ برای رکوردهای فقط‌شناسه‌ای، خودِ سطر را می‌خواند.
+async function describeActivity(input: ActionInput): Promise<{ kind: string; summary: string }> {
+  switch (input.action) {
+    case "task.create":
+      return { kind: "task", summary: `قدم تازه به امروز اضافه شد: «${input.title}»` };
+    case "task.toggle": {
+      const [row] = await db.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.id));
+      const titleText = row?.title ? `«${row.title}»` : "یک قدم";
+      return input.done
+        ? { kind: "task", summary: `تیک خورد: ${titleText} انجام شد` }
+        : { kind: "task", summary: `تیک برداشته شد: ${titleText}` };
+    }
+    case "task.time": {
+      const [row] = await db.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.id));
+      const titleText = row?.title ? `«${row.title}»` : "یک قدم";
+      return {
+        kind: "task",
+        summary: input.time ? `ساعت ${titleText} شد ${input.time}` : `ساعت ${titleText} حذف شد`,
+      };
+    }
+    case "task.delete": {
+      const [row] = await db.select({ title: tasks.title }).from(tasks).where(eq(tasks.id, input.id));
+      return { kind: "task", summary: `قدم «${row?.title ?? "نامشخص"}» از برنامه حذف شد` };
+    }
+    case "job.create":
+      return { kind: "job", summary: `فرصت شغلی ثبت شد: «${input.role}» در ${input.company}` };
+    case "job.update": {
+      const [row] = await db.select({ company: applications.company }).from(applications).where(eq(applications.id, input.id));
+      return {
+        kind: "job",
+        summary: `وضعیت «${row?.company ?? "فرصت"}» به «${statusLabels[input.status] || input.status}» تغییر کرد`,
+      };
+    }
+    case "job.delete": {
+      const [row] = await db
+        .select({ company: applications.company })
+        .from(applications)
+        .where(eq(applications.id, input.id));
+      return { kind: "job", summary: `فرصت «${row?.company ?? "نامشخص"}» حذف شد` };
+    }
+    case "project.step": {
+      const [project] = await db.select().from(projects).where(eq(projects.id, input.id));
+      const stepTitle = project?.steps[input.index]?.title;
+      const projectName = project?.name ?? "پروژه";
+      if (!stepTitle) return { kind: "project", summary: `به‌روزرسانی مراحل «${projectName}»` };
+      return {
+        kind: "project",
+        summary: input.done ? `مرحله «${stepTitle}» در «${projectName}» انجام شد` : `مرحله «${stepTitle}» در «${projectName}» باز شد`,
+      };
+    }
+    case "project.link": {
+      const [project] = await db.select().from(projects).where(eq(projects.id, input.id));
+      return { kind: "project", summary: `لینک پروژهٔ «${project?.name ?? "نامشخص"}» به‌روز شد` };
+    }
+    case "checkin.save":
+      return { kind: "checkin", summary: `حال امروز ثبت شد (${fa(input.mood)} از ۵)` };
+    case "finance.create": {
+      const label = input.type === "income" ? "درآمد" : input.type === "expense" ? "هزینه" : "پس‌انداز";
+      const cats = input.category === "cats" ? " (گربه‌ها)" : "";
+      return { kind: "finance", summary: `${label} ثبت شد: «${input.title}»${cats} — ${faNumber(input.amount)} تومان` };
+    }
+    case "finance.delete": {
+      const [row] = await db
+        .select({ title: transactions.title })
+        .from(transactions)
+        .where(eq(transactions.id, input.id));
+      return { kind: "finance", summary: `«${row?.title ?? "تراکنش"}» از مالی حذف شد` };
+    }
+    case "note.save":
+      return input.id
+        ? { kind: "note", summary: `یادداشت «${input.title}» به‌روز شد` }
+        : { kind: "note", summary: `یادداشت تازه: «${input.title}»` };
+    case "note.delete": {
+      const [row] = await db.select({ title: notes.title }).from(notes).where(eq(notes.id, input.id));
+      return { kind: "note", summary: `یادداشت «${row?.title ?? "نامشخص"}» حذف شد` };
+    }
+    case "settings.update":
+      return { kind: "settings", summary: "تنظیمات مسیر به‌روز شد" };
+    case "day.close":
+      return { kind: "day", summary: "امروز بسته و کارنامه‌اش نوشته شد" };
+    case "plan.add":
+      return { kind: "plan", summary: `به برنامه اضافه شد: «${input.title}» (ساعت ${input.time})` };
+    case "plan.update": {
+      const [row] = await db.select({ title: planItems.title }).from(planItems).where(eq(planItems.id, input.id));
+      const changed = Object.keys(input.patch)
+        .map((key) => planFieldLabels[key])
+        .filter(Boolean)
+        .join("، ");
+      return {
+        kind: "plan",
+        summary: `«${row?.title ?? "فعالیت"}» ویرایش شد${changed ? ` (${changed})` : ""}`,
+      };
+    }
+    case "plan.toggle": {
+      const [row] = await db.select({ title: planItems.title }).from(planItems).where(eq(planItems.id, input.id));
+      const titleText = row?.title ? `«${row.title}»` : "یک فعالیت";
+      return input.done
+        ? { kind: "plan", summary: `انجام شد: ${titleText}` }
+        : { kind: "plan", summary: `تیک برداشته شد: ${titleText}` };
+    }
+    case "plan.reorder":
+      return { kind: "plan", summary: "ترتیب برنامهٔ امروز جابه‌جا شد" };
+    case "plan.drop": {
+      const [row] = await db.select({ title: planItems.title }).from(planItems).where(eq(planItems.id, input.id));
+      const titleText = row?.title ? `«${row.title}»` : "یک فعالیت";
+      return input.dropped
+        ? { kind: "plan", summary: `کنار گذاشته شد: ${titleText}` }
+        : { kind: "plan", summary: `به برنامه برگردانده شد: ${titleText}` };
+    }
+    case "plan.generate":
+      return { kind: "plan", summary: "مربی برنامهٔ امروز را نوشت" };
+    case "social.log":
+      return {
+        kind: "social",
+        summary: `مواجههٔ اجتماعی: «${input.title}» (ترس ${fa(input.prediction)} ← واقعیت ${fa(input.outcome)})`,
+      };
+    case "social.delete": {
+      const [row] = await db
+        .select({ title: socialLogs.title })
+        .from(socialLogs)
+        .where(eq(socialLogs.id, input.id));
+      return { kind: "social", summary: `مواجههٔ «${row?.title ?? "نامشخص"}» حذف شد` };
+    }
+    case "program.save":
+      return { kind: "challenge", summary: `وضعیت قوانین چالش ثبت شد (${fa(input.completed.length)} قانون تیک‌خورده)` };
+  }
+}
 
 export type ActionResult = { ok: true } | { ok: false; error: string; status: number };
 
@@ -369,6 +510,17 @@ export async function runAction(raw: unknown): Promise<ActionResult> {
           });
         break;
       }
+    }
+    // دفترچه‌ی تغییرات: شکستِ ثبتِ تغییرات نباید خودِ تغییر را نشده بگیرد.
+    try {
+      const description = await describeActivity(input);
+      await db.insert(activity).values({
+        id: crypto.randomUUID(),
+        kind: description.kind,
+        summary: description.summary,
+      });
+    } catch (logError) {
+      console.error("Activity log failed (the change itself was saved)", logError);
     }
     return { ok: true };
   } catch (error) {

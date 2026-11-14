@@ -127,6 +127,20 @@ export const socialLogs = robehrah.table("journey_social_logs", {
   createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
 });
 
+// دفترچه‌ی «تغییرات من»: هر تغییری که از طریق برنامه ذخیره می‌شود، یک ردیف کوتاه این‌جا می‌نشیند.
+// جدول تعدی‌ناپذیر است؛ فقط افزودنی، هیچ‌وقت ویرایش/حذف نمی‌شود.
+export const activity = robehrah.table(
+  "journey_activity",
+  {
+    id: text("id").primaryKey(),
+    at: timestamp("at", { mode: "string" }).notNull().defaultNow(),
+    // task | plan | challenge | finance | note | checkin | job | project | social | settings | day
+    kind: text("kind").notNull().default("system"),
+    summary: text("summary").notNull(),
+  },
+  (table) => [index("journey_activity_at_idx").on(table.at)],
+);
+
 export const dailyReviews = robehrah.table("journey_daily_reviews", {
   day: text("day").primaryKey(),
   percent: integer("percent").notNull(),

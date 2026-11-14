@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import Image from "next/image";
 import {
-  LayoutDashboard,
+  Home,
   Route,
   BriefcaseBusiness,
   FolderKanban,
@@ -18,45 +17,33 @@ import {
   ChevronDown,
   ArrowLeft,
   ArrowUpLeft,
-  Plus,
   CalendarDays,
   Sparkles,
   Leaf,
-  Target,
   Clock3,
   Check,
-  Heart,
-  ShieldCheck,
-  Sprout,
+  History,
+  Flame,
+  Zap,
   Menu,
   X,
   UserRound,
   Download,
   CheckCircle2,
   CircleAlert,
-  Sunrise,
   Compass,
-  FileText,
-  BookOpen,
-  Flame,
-  Zap,
-  Award,
-  TrendingUp,
-  Minus,
+  Sprout,
 } from "lucide-react";
 import {
   categoryLabels,
   fa,
   todayKey,
-  journeyDay,
   type Workspace,
   type View,
   type Mutation,
   type Note,
-  type Task,
 } from "@/lib/types";
-import { phases } from "@/lib/content";
-import { DailyCheckin, IconBox, Modal, Progress, type Mutate } from "@/components/ui";
+import { Modal, type Mutate, TaskRow } from "@/components/ui";
 import {
   RoadmapView,
   CareerView,
@@ -65,32 +52,62 @@ import {
   FinanceView,
   NotesView,
   GuideView,
-  ProjectCard,
   ProjectDetails,
 } from "@/components/views";
 import { ProgressView } from "@/components/progress";
 import { AssistantView } from "@/components/assistant";
 import { DevelopmentView } from "@/components/development";
-import { computeStreak, dayStats, dayKey, formatTime, goalFor, blockOf, timeBlocks, nextAction } from "@/lib/stats";
+import { TodayView } from "@/components/today";
+import { TimelineView } from "@/components/timeline";
 
-const navigation = [
-  { id: "assistant" as View, title: "دستیار هوشمند", icon: Sparkles, badge: "جمینا" },
-  { id: "overview" as View, title: "نمای کلی", icon: LayoutDashboard },
-  { id: "roadmap" as View, title: "نقشه راه من", icon: Route, badge: "۹۰ روز" },
-  { id: "career" as View, title: "مسیر شغلی", icon: BriefcaseBusiness },
-  { id: "projects" as View, title: "پروژه‌های من", icon: FolderKanban },
-  { id: "progress" as View, title: "پیشرفت من", icon: Flame },
-  { id: "development" as View, title: "چالش ۷۵ روزه", icon: Zap },
-  { id: "health" as View, title: "حال خوب و عادت‌ها", icon: HeartPulse },
-  { id: "finance" as View, title: "مدیریت مالی", icon: Wallet },
-  { id: "notes" as View, title: "یادداشت‌های من", icon: NotebookPen },
+const NAV_GROUPS_KEY = "robeh-rah:nav-groups";
+
+const navGroups: Array<{
+  id: string;
+  title: string;
+  items: Array<{ id: View; title: string; icon: typeof Home; badge?: string }>;
+}> = [
+  {
+    id: "today",
+    title: "امروز",
+    items: [
+      { id: "today", title: "امروز من", icon: Home },
+      { id: "development", title: "چالش ۷۵ روزه", icon: Zap },
+      { id: "assistant", title: "دستیار هوشمند", icon: Sparkles, badge: "جمینا" },
+    ],
+  },
+  {
+    id: "path",
+    title: "مسیر من",
+    items: [
+      { id: "roadmap", title: "نقشه راه", icon: Route, badge: "۹۰ روز" },
+      { id: "projects", title: "پروژه‌های من", icon: FolderKanban },
+      { id: "career", title: "مسیر شغلی", icon: BriefcaseBusiness },
+    ],
+  },
+  {
+    id: "me",
+    title: "خودت",
+    items: [
+      { id: "progress", title: "پیشرفت من", icon: Flame },
+      { id: "timeline", title: "تغییرات من", icon: History },
+      { id: "health", title: "حال خوب و عادت‌ها", icon: HeartPulse },
+      { id: "finance", title: "مدیریت مالی", icon: Wallet },
+      { id: "notes", title: "یادداشت‌های من", icon: NotebookPen },
+    ],
+  },
 ];
+
+const navigation = navGroups.flatMap((group) => group.items);
 const viewTitles: Record<View, { title: string; subtitle: string }> = {
   assistant: {
     title: "دستیار هوشمند",
     subtitle: "هرچه می‌خواهی را بگو؛ جمینا انجامش می‌دهد و منتظر تأیید تو می‌ماند.",
   },
-  overview: { title: "نمای کلی", subtitle: "لازم نیست همه مسیر رو بدونی؛ فعلاً فقط قدم بعدی." },
+  today: {
+    title: "امروز من",
+    subtitle: "یک امروز، یک صفحه؛ از قدم بعدی شروع کن.",
+  },
   roadmap: { title: "نقشه راه ۹۰ روزه تو", subtitle: "از ثبات امروز تا فرصت‌های فردا؛ یک مسیر واقعی و قابل تغییر." },
   career: { title: "مسیر شغلی تو", subtitle: "تجربه‌هایی که داری، می‌تونن نقطه شروع شغل بعدی باشن." },
   projects: {
@@ -100,6 +117,10 @@ const viewTitles: Record<View, { title: string; subtitle: string }> = {
   progress: { title: "پیشرفت من", subtitle: "نمودار روزانه، زنجیره نظمت و دستاوردهایی که باز کرده‌ای." },
   health: { title: "کمی بیشتر، کنار خودت باش", subtitle: "حال تو مهمه؛ حتی وقتی همه‌چیز طبق برنامه پیش نمی‌ره." },
   finance: { title: "قدم‌های کوچک، خیال آسوده‌تر", subtitle: "پولت را روشن‌تر ببین و متناسب با توانت، آرام جلو برو." },
+  timeline: {
+    title: "تغییرات من",
+    subtitle: "هر چیزی که در مسیرت عوض شد — تیک‌ها، برنامه، مالی و حال — یک‌جا و به ترتیب.",
+  },
   development: {
     title: "چالش ۷۵ روزه روبه‌راه",
     subtitle: "برنامه‌ای استاندارد و سخت‌گیرانه برای بازگرداندن انضباط، آرامش و اختیار؛ هم روحی و روانی، هم مالی.",
@@ -110,53 +131,9 @@ const viewTitles: Record<View, { title: string; subtitle: string }> = {
 
 const field = (form: FormData, name: string) => String(form.get(name) || "");
 
-function TaskRow({
-  task,
-  busy,
-  onToggle,
-  onDelete,
-}: {
-  task: Task;
-  busy: boolean;
-  onToggle: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className={`daily-task ${task.done ? "done" : ""}`}>
-      <button
-        role="checkbox"
-        aria-checked={task.done}
-        aria-label={task.title}
-        disabled={busy}
-        className="task-checkbox"
-        onClick={onToggle}
-      >
-        {task.done && <Check size={13} strokeWidth={2.5} />}
-      </button>
-      <div className="task-content">
-        <h3>{task.title}</h3>
-        <div className="task-meta">
-          <span className={`category-tag ${task.category}`}>{categoryLabels[task.category] || "شخصی"}</span>
-          <span>
-            <Clock3 size={11} /> {fa(task.minutes)} دقیقه
-          </span>
-          {task.time && (
-            <span className="task-time">
-              <Clock3 size={11} /> {formatTime(task.time)}
-            </span>
-          )}
-        </div>
-      </div>
-      <button className="task-delete icon-button" onClick={onDelete} aria-label={`حذف ${task.title}`}>
-        <X size={14} />
-      </button>
-    </div>
-  );
-}
-
 export function JourneyApp({ initialData }: { initialData: Workspace }) {
   const [data, setData] = useState(initialData);
-  const [view, setView] = useState<View>("overview");
+  const [view, setView] = useState<View>("today");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modal, setModal] = useState<"task" | "job" | "finance" | "settings" | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -172,33 +149,61 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
   const searchInput = useRef<HTMLInputElement>(null);
   const searchContainer = useRef<HTMLDivElement>(null);
   const notificationContainer = useRef<HTMLDivElement>(null);
-  const dailyRef = useRef<HTMLElement>(null);
-  const day = journeyDay(data.settings.startedOn);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(window.localStorage.getItem(NAV_GROUPS_KEY) || "{}") as Record<string, boolean>;
+    } catch {
+      return {};
+    }
+  });
   const todayTasks = data.tasks.filter((task) => task.day === todayKey());
   const done = todayTasks.filter((task) => task.done).length;
-  const completion = todayTasks.length ? Math.round((done / todayTasks.length) * 100) : 0;
   const todayCheckin = data.checkins.find((entry) => entry.day === todayKey());
   const activeProject = data.projects.find((project) => project.id === projectId);
-  const next = nextAction(data.tasks);
-  const unscheduled = todayTasks.filter((task) => !task.time);
-  const todayStat = dayStats(data.tasks, todayKey());
-  const dailyGoal = goalFor(todayStat, data.settings.dailyTarget);
-  const remaining = Math.max(0, dailyGoal - todayStat.done);
-  const streak = computeStreak(data.tasks, data.settings.dailyTarget).streak;
 
-  const go = useCallback((next: View) => {
-    setView(next);
-    setMobileOpen(false);
-    setNotifications(false);
-    setSearchOpen(false);
-    window.history.replaceState(null, "", `#${next}`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const toggleGroup = useCallback((id: string) => {
+    setOpenGroups((current) => {
+      const next = { ...current, [id]: current[id] === false };
+      try {
+        window.localStorage.setItem(NAV_GROUPS_KEY, JSON.stringify(next));
+      } catch {
+        // ignore storage failures (private mode)
+      }
+      return next;
+    });
   }, []);
+
+  // Keep the group that owns a view expanded whenever we enter it.
+  const expandOwner = useCallback((id: View) => {
+    const owner = navGroups.find((group) => group.items.some((item) => item.id === id));
+    if (owner) {
+      setOpenGroups((current) => (current[owner.id] === false ? { ...current, [owner.id]: true } : current));
+    }
+  }, []);
+
+  const go = useCallback(
+    (next: View) => {
+      setView(next);
+      expandOwner(next);
+      setMobileOpen(false);
+      setNotifications(false);
+      setSearchOpen(false);
+      window.history.replaceState(null, "", `#${next}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+    [expandOwner],
+  );
 
   useEffect(() => {
     const sync = () => {
-      const hash = window.location.hash.slice(1) as View;
-      if (hash in viewTitles) setView(hash);
+      let hash = window.location.hash.slice(1);
+      if (hash === "overview") hash = "today"; // legacy link
+      const target = hash as View;
+      if (hash in viewTitles) {
+        setView(target);
+        expandOwner(target);
+      }
     };
     // Defer the initial hash sync one frame so it is not a synchronous setState inside the effect.
     const frame = requestAnimationFrame(sync);
@@ -227,7 +232,7 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", outside);
     };
-  }, []);
+  }, [expandOwner]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(null), 4500);
@@ -276,7 +281,7 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
     ...data.tasks.map((item) => ({
       title: item.title,
       type: "قدم روزانه",
-      view: "overview" as View,
+      view: "today" as View,
       project: undefined as string | undefined,
     })),
     ...data.projects.map((item) => ({
@@ -353,11 +358,11 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
       {mobileOpen && <button className="sidebar-backdrop" aria-label="بستن منو" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${mobileOpen ? "open" : ""}`}>
         <a
-          href="#overview"
+          href="#today"
           className="brand"
           onClick={(event) => {
             event.preventDefault();
-            go("overview");
+            go("today");
           }}
           aria-label="روبه‌راه؛ صفحه اصلی"
         >
@@ -374,21 +379,38 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
         <button className="mobile-close icon-button" onClick={() => setMobileOpen(false)} aria-label="بستن منو">
           <X size={20} />
         </button>
-        <div className="navigation-label">فضای شخصی تو</div>
         <nav className="main-nav" aria-label="منوی اصلی">
-          {navigation.map(({ id, title, icon: Icon, badge }) => (
-            <button
-              key={id}
-              className={`nav-item ${view === id ? "active" : ""}`}
-              onClick={() => go(id)}
-              aria-current={view === id ? "page" : undefined}
-            >
-              <Icon size={19} strokeWidth={1.65} />
-              <span>{title}</span>
-              {badge && <small className="nav-badge">{badge}</small>}
-              {view === id && !badge && <span className="nav-active-dot" />}
-            </button>
-          ))}
+          {navGroups.map((group) => {
+            const open = openGroups[group.id] !== false;
+            return (
+              <div className="nav-group" key={group.id}>
+                <button
+                  className="nav-group-toggle"
+                  onClick={() => toggleGroup(group.id)}
+                  aria-expanded={open}
+                  aria-controls={`nav-group-${group.id}`}
+                >
+                  <span>{group.title}</span>
+                  <ChevronDown size={14} strokeWidth={2} className={`nav-group-chevron ${open ? "" : "collapsed"}`} />
+                </button>
+                <div className={`nav-group-items ${open ? "" : "collapsed"}`} id={`nav-group-${group.id}`}>
+                  {group.items.map(({ id, title, icon: Icon, badge }) => (
+                    <button
+                      key={id}
+                      className={`nav-item ${view === id ? "active" : ""}`}
+                      onClick={() => go(id)}
+                      aria-current={view === id ? "page" : undefined}
+                    >
+                      <Icon size={19} strokeWidth={1.65} />
+                      <span>{title}</span>
+                      {badge && <small className="nav-badge">{badge}</small>}
+                      {view === id && !badge && <span className="nav-active-dot" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </nav>
         <div className="sidebar-bottom">
           <div className="sidebar-message">
@@ -446,11 +468,7 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
             <Compass size={18} />
             <span>فضای شخصی من</span>
             <ChevronLeft size={13} />
-            <strong>
-              {viewTitles[view].title === "نمای کلی"
-                ? "نمای کلی"
-                : navigation.find((item) => item.id === view)?.title || "راهنما"}
-            </strong>
+            <strong>{navigation.find((item) => item.id === view)?.title || "راهنما"}</strong>
           </div>
           <div className="topbar-tools">
             <div className="global-search" ref={searchContainer}>
@@ -518,7 +536,7 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
                   <h3>
                     یادآوری‌های آرام <Leaf size={15} />
                   </h3>
-                  <button onClick={() => go("overview")}>
+                  <button onClick={() => go("today")}>
                     <span className="reminder-dot purple" />
                     <span>
                       {done === todayTasks.length
@@ -552,7 +570,7 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
         <main className="main-content" id="main-content">
           <div className="main-heading">
             <div>
-              {view === "overview" ? (
+              {view === "today" ? (
                 <h1>
                   سلام {data.settings.name}، خوش اومدی <span className="wave">👋🏻</span>
                 </h1>
@@ -561,360 +579,24 @@ export function JourneyApp({ initialData }: { initialData: Workspace }) {
               )}
               <p>{viewTitles[view].subtitle}</p>
             </div>
-            {view === "overview" ? (
-              <span className="fresh-start">
-                <span /> یک شروع تازه، از همین امروز
-              </span>
-            ) : (
-              <button className="button outline small" onClick={() => go("overview")}>
-                نمای کلی <ArrowUpLeft size={15} />
+            {view !== "today" && (
+              <button className="button outline small" onClick={() => go("today")}>
+                بازگشت به امروز <ArrowUpLeft size={15} />
               </button>
             )}
           </div>
           <div className="view-content" key={view}>
-            {view === "overview" && (
-              <>
-                <section className="journey-hero">
-                  <div className="hero-copy">
-                    <span className="hero-eyebrow">
-                      <Sparkles size={15} /> این شروعِ فصل تازه‌ی توست
-                    </span>
-                    <h2>از همین‌جا، دوباره شروع کن.</h2>
-                    <p>
-                      قرار نیست یک‌شبه همه‌چیز عوض بشه. با قدم‌های کوچک،
-                      <br className="desktop-break" /> مسیر کار، زندگی و حال خوبت رو دوباره بساز.
-                    </p>
-                    <div className="hero-actions">
-                      <button
-                        className="button primary"
-                        onClick={() => {
-                          dailyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                          dailyRef.current?.focus({ preventScroll: true });
-                        }}
-                      >
-                        بریم سراغ قدم امروز <ArrowLeft size={17} />
-                      </button>
-                      <span className="hero-day">
-                        <span /> روز {fa(day)} از مسیر ۹۰ روزه
-                      </span>
-                    </div>
-                  </div>
-                  <div className="hero-art">
-                    <Image
-                      src="/images/journey.png"
-                      width={768}
-                      height={512}
-                      alt="پله‌های آرام در مسیری بنفش، رو به یک شروع تازه"
-                      priority
-                    />
-                  </div>
-                  <span className="hero-art-caption">
-                    <Compass size={14} /> مسیر تو، با قدم‌های خودت
-                  </span>
-                </section>
-                <div className="stats-grid">
-                  <button
-                    className="stat-card"
-                    onClick={() => dailyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                  >
-                    <div className="stat-top">
-                      <span>قدم‌های امروز</span>
-                      <IconBox icon={Target} color="purple" />
-                    </div>
-                    <div className="stat-value">
-                      {fa(done)} <small>از {fa(todayTasks.length)}</small>
-                    </div>
-                    <div className="stat-bottom">
-                      <span className="stat-tag purple">کوچک، اما مهم</span>
-                      <span className="stat-mini-progress">
-                        <Progress value={completion} />
-                      </span>
-                    </div>
-                  </button>
-                  <button className="stat-card" onClick={() => go("career")}>
-                    <div className="stat-top">
-                      <span>فرصت شغلی در پیگیری</span>
-                      <IconBox icon={BriefcaseBusiness} color="blue" />
-                    </div>
-                    <div className="stat-value">
-                      {fa(data.applications.filter((job) => job.status !== "rejected").length)} <small>فرصت</small>
-                    </div>
-                    <div className="stat-bottom">
-                      <span className="stat-tag blue">فرصت بعدی رو بساز</span>
-                      <ArrowUpLeft size={14} />
-                    </div>
-                  </button>
-                  <button className="stat-card" onClick={() => go("projects")}>
-                    <div className="stat-top">
-                      <span>ایده‌های در مسیر</span>
-                      <IconBox icon={FolderKanban} color="peach" />
-                    </div>
-                    <div className="stat-value">
-                      {fa(data.projects.length)} <small>پروژه</small>
-                    </div>
-                    <div className="stat-bottom">
-                      <span className="stat-tag peach">تمرکز روی یک پروژه</span>
-                      <ArrowUpLeft size={14} />
-                    </div>
-                  </button>
-                  <button className="stat-card" onClick={() => go("progress")}>
-                    <div className="stat-top">
-                      <span>زنجیره روزهای پیوسته</span>
-                      <IconBox icon={Flame} color="peach" />
-                    </div>
-                    <div className="stat-value">
-                      {fa(streak)} <small>روز</small>
-                    </div>
-                    <div className="stat-bottom">
-                      <span className="stat-tag peach">
-                        {streak >= 3 ? "نظمت دارد شکل می‌گیرد" : "امروز زنجیره را ادامه بده"}
-                      </span>
-                      <TrendingUp size={14} />
-                    </div>
-                  </button>
-                </div>
-                <div className="dashboard-primary">
-                  <section className="panel daily-panel" ref={dailyRef} tabIndex={-1}>
-                    <div className="section-heading">
-                      <div>
-                        <h2>
-                          <span className="heading-icon">
-                            <CalendarDays size={19} />
-                          </span>{" "}
-                          برنامه امروز من
-                        </h2>
-                        <p>قدم‌ها را در بلوک‌های روزت بچین؛ ساده‌تر که باشد، بیشتر انجام می‌شود.</p>
-                      </div>
-                      <button className="text-button" onClick={() => setModal("task")}>
-                        <Plus size={15} /> افزودن کار
-                      </button>
-                    </div>
-                    {next && (
-                      <div className="next-action">
-                        <div className="next-copy">
-                          <span className="next-label">
-                            <Target size={12} /> قدم بعدی تو
-                          </span>
-                          <h3>{next.title}</h3>
-                          <div className="task-meta">
-                            <span className={`category-tag ${next.category}`}>
-                              {categoryLabels[next.category] || "شخصی"}
-                            </span>
-                            <span>
-                              <Clock3 size={11} /> {fa(next.minutes)} دقیقه
-                            </span>
-                            {next.time && (
-                              <span className="task-time">
-                                <Clock3 size={11} /> {formatTime(next.time)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          className="button primary small"
-                          disabled={busy}
-                          onClick={() =>
-                            mutate(
-                              { action: "task.toggle", id: next.id, done: true },
-                              "یک قدم رو به جلو! این کار انجام شد.",
-                            )
-                          }
-                        >
-                          <Check size={14} /> انجام شد
-                        </button>
-                      </div>
-                    )}
-                    <div className="timeline">
-                      {timeBlocks.map((block) => {
-                        const list = todayTasks
-                          .filter((task) => blockOf(task.time) === block.id)
-                          .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
-                        return (
-                          <div className={`time-block ${list.length ? "" : "is-empty"}`} key={block.id}>
-                            <div className="time-block-head">
-                              <span className="block-name">{block.label}</span>
-                              <span className="block-hint">{block.hint}</span>
-                              <span className="block-count">
-                                {list.length
-                                  ? `${fa(list.filter((task) => task.done).length)} از ${fa(list.length)}`
-                                  : "بدون برنامه"}
-                              </span>
-                            </div>
-                            {list.length ? (
-                              <div className="daily-tasks">
-                                {list.map((task) => (
-                                  <TaskRow
-                                    key={task.id}
-                                    task={task}
-                                    busy={busy}
-                                    onToggle={() =>
-                                      mutate(
-                                        { action: "task.toggle", id: task.id, done: !task.done },
-                                        task.done ? "قدم امروز دوباره باز شد." : "یک قدم رو به جلو! این کار انجام شد.",
-                                      )
-                                    }
-                                    onDelete={() =>
-                                      askDelete(
-                                        { action: "task.delete", id: task.id },
-                                        "این قدم از برنامه امروز حذف شود؟",
-                                      )
-                                    }
-                                  />
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="block-empty">این بلوک خالی است؛ همین خوب است.</p>
-                            )}
-                          </div>
-                        );
-                      })}
-                      {unscheduled.length > 0 && (
-                        <div className="time-block unscheduled-block">
-                          <div className="time-block-head">
-                            <span className="block-name">بدون ساعت</span>
-                            <span className="block-hint">هر وقت آماده بودی</span>
-                            <span className="block-count">
-                              {fa(unscheduled.filter((task) => task.done).length)} از {fa(unscheduled.length)}
-                            </span>
-                          </div>
-                          <div className="daily-tasks">
-                            {unscheduled.map((task) => (
-                              <TaskRow
-                                key={task.id}
-                                task={task}
-                                busy={busy}
-                                onToggle={() =>
-                                  mutate(
-                                    { action: "task.toggle", id: task.id, done: !task.done },
-                                    task.done ? "قدم امروز دوباره باز شد." : "یک قدم رو به جلو! این کار انجام شد.",
-                                  )
-                                }
-                                onDelete={() =>
-                                  askDelete({ action: "task.delete", id: task.id }, "این قدم از برنامه امروز حذف شود؟")
-                                }
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {todayTasks.length === 0 && (
-                      <p className="empty-tasks">برنامه امروزت خالیه؛ یک قدم خیلی کوچک اضافه کن.</p>
-                    )}
-                    <div className="daily-progress">
-                      <div>
-                        <span>
-                          {fa(done)} از {fa(todayTasks.length)} قدم انجام شده
-                        </span>
-                        <strong>{fa(completion)}٪</strong>
-                      </div>
-                      <Progress value={completion} />
-                      <p>
-                        <Sparkles size={12} />{" "}
-                        {completion === 100 && todayTasks.length
-                          ? "به خودت افتخار کن؛ امروز قدم‌هات رو برداشتی."
-                          : "هر قدم کوچک، تو رو به مسیرت برمی‌گردونه."}
-                      </p>
-                    </div>
-                    <div className="commitment-strip">
-                      <span className="commitment-strip-label">
-                        <Flame size={14} /> تعهد روزانه
-                      </span>
-                      <strong>{fa(dailyGoal)} قدم</strong>
-                      <span className="commitment-strip-note">
-                        {remaining === 0
-                          ? "امروز به تعهدت رسیدی؛ زنجیره‌ات حفظ شد."
-                          : `${fa(remaining)} قدم دیگر برای رسیدن به تعهد امروز`}
-                      </span>
-                      <button className="text-button" onClick={() => go("progress")}>
-                        نمودار پیشرفت <ArrowLeft size={13} />
-                      </button>
-                    </div>
-                  </section>
-                  <section className="panel checkin-panel">
-                    <div className="section-heading">
-                      <div>
-                        <h2>
-                          حال امروزت چطوره؟ <span className="small-leaf">✧</span>
-                        </h2>
-                        <p>چند ثانیه برای خودت وقت بذار.</p>
-                      </div>
-                      <Heart size={19} strokeWidth={1.6} className="purple-text" />
-                    </div>
-                    <DailyCheckin checkin={todayCheckin} mutate={mutate} busy={busy} />
-                  </section>
-                </div>
-                <section className="panel roadmap-preview">
-                  <div className="section-heading">
-                    <div>
-                      <h2>
-                        نقشه راه تو، قدم به قدم <span className="tiny-label">۹۰ روز برای خودت</span>
-                      </h2>
-                      <p>اول ثبات، بعد ساختن، بعد رشد؛ بدون عجله و مقایسه.</p>
-                    </div>
-                    <button className="text-button" onClick={() => go("roadmap")}>
-                      دیدن مسیر کامل <ArrowLeft size={14} />
-                    </button>
-                  </div>
-                  <div className="phase-preview-grid">
-                    {phases.map((item, index) => (
-                      <button
-                        key={item.title}
-                        className={`phase-preview ${index === 0 ? "current" : ""}`}
-                        onClick={() => {
-                          setPhase(index);
-                          go("roadmap");
-                        }}
-                      >
-                        <div className="phase-preview-top">
-                          <span className={`phase-step ${item.color}`}>
-                            {index === 0 ? (
-                              <ShieldCheck size={19} />
-                            ) : index === 1 ? (
-                              <Sparkles size={19} />
-                            ) : (
-                              <Sprout size={19} />
-                            )}
-                          </span>
-                          <span>{item.period}</span>
-                          {index === 0 && (
-                            <small>
-                              <span /> شروع مسیر
-                            </small>
-                          )}
-                        </div>
-                        <h3>{item.title}</h3>
-                        <div className="phase-preview-bottom">
-                          <p>{item.subtitle}</p>
-                          <ArrowLeft size={15} />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-                <section className="project-preview-section">
-                  <div className="section-heading">
-                    <div>
-                      <h2>از ایده تا اولین نتیجه</h2>
-                      <p>تجربه‌هات را به نمونه‌کارهای واقعی تبدیل کن.</p>
-                    </div>
-                    <button className="text-button" onClick={() => go("projects")}>
-                      همه پروژه‌ها <ArrowLeft size={14} />
-                    </button>
-                  </div>
-                  <div className="project-grid">
-                    {data.projects.map((project) => (
-                      <ProjectCard
-                        project={project}
-                        key={project.id}
-                        compact
-                        onClick={() => setProjectId(project.id)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              </>
+            {view === "today" && (
+              <TodayView
+                data={data}
+                mutate={mutate}
+                busy={busy}
+                onAddTask={() => setModal("task")}
+                onOpenDevelopment={() => go("development")}
+                onAskDelete={askDelete}
+              />
             )}
+            {view === "timeline" && <TimelineView data={data} go={go} />}
             {view === "assistant" && <AssistantView mutate={mutate} busy={busy} go={go} applyWorkspace={setData} />}
             {view === "roadmap" && (
               <RoadmapView data={data} mutate={mutate} busy={busy} selected={phase} onSelect={setPhase} />

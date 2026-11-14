@@ -10,6 +10,7 @@ import type {
   dailyReviews,
   planItems,
   socialLogs,
+  activity,
 } from "@/db/schema";
 import { tehranDayKey } from "@/lib/tehran-day";
 
@@ -23,6 +24,7 @@ export type ProgramDay = typeof programDays.$inferSelect;
 export type DailyReview = typeof dailyReviews.$inferSelect;
 export type PlanItem = typeof planItems.$inferSelect;
 export type SocialLog = typeof socialLogs.$inferSelect;
+export type Activity = typeof activity.$inferSelect;
 export type Settings = typeof settings.$inferSelect;
 
 export type Workspace = {
@@ -37,11 +39,12 @@ export type Workspace = {
   dailyReviews: DailyReview[];
   planItems: PlanItem[];
   socialLogs: SocialLog[];
+  activity: Activity[];
 };
 
 export type View =
+  | "today"
   | "assistant"
-  | "overview"
   | "roadmap"
   | "career"
   | "projects"
@@ -49,6 +52,7 @@ export type View =
   | "health"
   | "finance"
   | "development"
+  | "timeline"
   | "notes"
   | "guide";
 export type Mutation = { action: string; [key: string]: unknown };

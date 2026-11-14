@@ -12,9 +12,10 @@ import {
   dailyReviews,
   planItems,
   socialLogs,
+  activity,
 } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
-import { todayKey, type Workspace } from "@/lib/types";
+import { todayKey, type Activity, type Workspace } from "@/lib/types";
 
 export async function getWorkspace(): Promise<Workspace> {
   const day = todayKey();
@@ -127,6 +128,13 @@ export async function getWorkspace(): Promise<Workspace> {
     db.select().from(planItems).orderBy(asc(planItems.position), asc(planItems.createdAt)),
     db.select().from(socialLogs).orderBy(desc(socialLogs.day), desc(socialLogs.createdAt)),
   ]);
+  // دفترچه‌ی تغییرات اختیاری است: اگر هنوز جدول ساخته نشده باشد (مثلاً قبل از اجرای مایگریشن)، برنامه بالا می‌آید و تایم‌لاین خالی می‌ماند.
+  let activityList: Activity[] = [];
+  try {
+    activityList = await db.select().from(activity).orderBy(desc(activity.at)).limit(300);
+  } catch (error) {
+    console.warn("Activity log unavailable; continuing without it", error);
+  }
   return {
     settings: profile[0],
     tasks: taskList,
@@ -139,5 +147,6 @@ export async function getWorkspace(): Promise<Workspace> {
     dailyReviews: dailyReviewList,
     planItems: planItemList,
     socialLogs: socialLogList,
+    activity: activityList,
   };
 }
